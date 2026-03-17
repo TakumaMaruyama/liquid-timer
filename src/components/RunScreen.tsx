@@ -9,7 +9,6 @@ import {
 } from '../lib/timerSession'
 import {
   getJapanesePhaseHeadline,
-  getJapanesePhaseLabel,
 } from '../lib/uiLabels'
 
 interface RunScreenProps {
@@ -117,8 +116,6 @@ export function RunScreen({ workout, onEdit }: RunScreenProps) {
             <h1 className="runScreen__title">{workout.title}</h1>
           </div>
           <div className="runScreen__headerMeta">
-            <span>{workout.rounds}セット</span>
-            <span>{totalReps}本</span>
             <button
               className="runScreen__headerToggle"
               type="button"
@@ -135,12 +132,6 @@ export function RunScreen({ workout, onEdit }: RunScreenProps) {
 
         <div className="runScreen__main">
           <section className="timerHero">
-            <div className="timerHero__meta">
-              <span className="timerChip">{getJapanesePhaseLabel(displayPhase)}</span>
-              <span className="timerChip">セット {session.currentRound}/{session.totalRounds}</span>
-              <span className="timerChip">本 {session.currentRep}/{session.totalRepsInRound}</span>
-            </div>
-
             <div className="timerHero__headline">
               {getJapanesePhaseHeadline(displayPhase)}
             </div>

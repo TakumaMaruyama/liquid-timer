@@ -1,17 +1,23 @@
-import type { ChangeEvent, FormEvent } from 'react'
+import { useState, type ChangeEvent, type FocusEvent, type FormEvent } from 'react'
 import { type PresetStore, type WorkoutPreset } from '../lib/presetStore'
 import {
   DEFAULT_WORKOUT,
   formatDurationLabel,
   getTotalWorkoutSeconds,
   normalizeWorkoutInput,
-  type QuickWorkoutInput,
 } from '../lib/timerSession'
 
 interface SetupScreenProps {
   presetStore: PresetStore
   onLaunch: () => void
 }
+
+type NumericFieldKey =
+  | 'rounds'
+  | 'repsPerRound'
+  | 'intervalSec'
+  | 'roundRestSec'
+  | 'leadInSec'
 
 function parsePositiveInteger(value: string, fallback: number, minimum: number) {
   const parsed = Number.parseInt(value, 10)
@@ -32,6 +38,10 @@ export function SetupScreen({ presetStore, onLaunch }: SetupScreenProps) {
   const normalized = normalizeWorkoutInput(selectedPreset.workout)
   const totalSeconds = getTotalWorkoutSeconds(normalized)
   const totalReps = normalized.rounds * normalized.repsPerRound
+  const [editingNumberField, setEditingNumberField] = useState<{
+    field: NumericFieldKey
+    value: string
+  } | null>(null)
 
   const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
     presetStore.update(selectedPreset.id, {
@@ -40,25 +50,62 @@ export function SetupScreen({ presetStore, onLaunch }: SetupScreenProps) {
   }
 
   const handleNumberChange =
-    (
-      field: keyof Pick<
-        QuickWorkoutInput,
-        'rounds' | 'repsPerRound' | 'intervalSec' | 'roundRestSec' | 'leadInSec'
-      >,
-      minimum: number,
-    ) =>
+    (field: NumericFieldKey, minimum: number) =>
     (event: ChangeEvent<HTMLInputElement>) => {
+      const nextValue = event.target.value
+
+      setEditingNumberField({
+        field,
+        value: nextValue,
+      })
+
+      if (nextValue === '') {
+        return
+      }
+
+      const parsed = Number.parseInt(nextValue, 10)
+      if (Number.isNaN(parsed)) {
+        return
+      }
+
       presetStore.update(selectedPreset.id, {
         workout: {
           ...selectedPreset.workout,
-          [field]: parsePositiveInteger(
-            event.target.value,
-            selectedPreset.workout[field],
-            minimum,
-          ),
+          [field]: Math.max(minimum, parsed),
         },
       })
     }
+
+  const handleNumberBlur =
+    (field: NumericFieldKey, minimum: number) =>
+    (event: FocusEvent<HTMLInputElement>) => {
+      const committedValue = parsePositiveInteger(
+        event.target.value,
+        normalized[field],
+        minimum,
+      )
+
+      setEditingNumberField(null)
+
+      presetStore.update(selectedPreset.id, {
+        workout: {
+          ...selectedPreset.workout,
+          [field]: committedValue,
+        },
+      })
+    }
+
+  const handleNumberFocus = (field: NumericFieldKey) => () => {
+    setEditingNumberField({
+      field,
+      value: normalized[field].toString(),
+    })
+  }
+
+  const getNumberInputValue = (field: NumericFieldKey) =>
+    editingNumberField?.field === field
+      ? editingNumberField.value
+      : normalized[field].toString()
 
   const handleAudioToggle = (event: ChangeEvent<HTMLInputElement>) => {
     presetStore.update(selectedPreset.id, {
@@ -169,8 +216,10 @@ export function SetupScreen({ presetStore, onLaunch }: SetupScreenProps) {
                       type="number"
                       min={1}
                       inputMode="numeric"
-                      value={normalized.repsPerRound}
+                      value={getNumberInputValue('repsPerRound')}
+                      onFocus={handleNumberFocus('repsPerRound')}
                       onChange={handleNumberChange('repsPerRound', 1)}
+                      onBlur={handleNumberBlur('repsPerRound', 1)}
                     />
                   </div>
 
@@ -182,8 +231,10 @@ export function SetupScreen({ presetStore, onLaunch }: SetupScreenProps) {
                       type="number"
                       min={1}
                       inputMode="numeric"
-                      value={normalized.rounds}
+                      value={getNumberInputValue('rounds')}
+                      onFocus={handleNumberFocus('rounds')}
                       onChange={handleNumberChange('rounds', 1)}
+                      onBlur={handleNumberBlur('rounds', 1)}
                     />
                   </div>
 
@@ -195,8 +246,10 @@ export function SetupScreen({ presetStore, onLaunch }: SetupScreenProps) {
                       type="number"
                       min={1}
                       inputMode="numeric"
-                      value={normalized.intervalSec}
+                      value={getNumberInputValue('intervalSec')}
+                      onFocus={handleNumberFocus('intervalSec')}
                       onChange={handleNumberChange('intervalSec', 1)}
+                      onBlur={handleNumberBlur('intervalSec', 1)}
                     />
                   </div>
 
@@ -208,8 +261,10 @@ export function SetupScreen({ presetStore, onLaunch }: SetupScreenProps) {
                       type="number"
                       min={0}
                       inputMode="numeric"
-                      value={normalized.roundRestSec}
+                      value={getNumberInputValue('roundRestSec')}
+                      onFocus={handleNumberFocus('roundRestSec')}
                       onChange={handleNumberChange('roundRestSec', 0)}
+                      onBlur={handleNumberBlur('roundRestSec', 0)}
                     />
                   </div>
 
@@ -221,8 +276,10 @@ export function SetupScreen({ presetStore, onLaunch }: SetupScreenProps) {
                       type="number"
                       min={0}
                       inputMode="numeric"
-                      value={normalized.leadInSec}
+                      value={getNumberInputValue('leadInSec')}
+                      onFocus={handleNumberFocus('leadInSec')}
                       onChange={handleNumberChange('leadInSec', 0)}
+                      onBlur={handleNumberBlur('leadInSec', 0)}
                     />
                   </div>
 
