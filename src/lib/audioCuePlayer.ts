@@ -3,7 +3,11 @@ import type { CueEvent } from './timerSession'
 export interface AudioCuePlayer {
   unlock: () => Promise<boolean>
   play: (event: CueEvent, enabled: boolean) => Promise<void>
-  playCountdownTick: (second: number, enabled: boolean) => Promise<void>
+  playCountdownTick: (
+    second: number,
+    enabled: boolean,
+    variant?: CountdownCueVariant,
+  ) => Promise<void>
 }
 
 interface ToneStep {
@@ -20,6 +24,8 @@ interface OutputBus {
   input: DynamicsCompressorNode
   master: GainNode
 }
+
+type CountdownCueVariant = 'start' | 'finish'
 
 const warningPitch = {
   frequency: 1760,
@@ -85,40 +91,77 @@ const cueMap: Record<CueEvent, ToneStep[]> = {
   ],
 }
 
-const countdownCueMap: Record<1 | 2 | 3, ToneStep[]> = {
-  3: [
-    {
-      delay: 0,
-      duration: 0.08,
-      frequency: warningPitch.frequency,
-      gain: 0.088,
-      overtone: warningPitch.overtone,
-      overtoneGain: 0.032,
-      waveform: 'square',
-    },
-  ],
-  2: [
-    {
-      delay: 0,
-      duration: 0.08,
-      frequency: warningPitch.frequency,
-      gain: 0.092,
-      overtone: warningPitch.overtone,
-      overtoneGain: 0.034,
-      waveform: 'square',
-    },
-  ],
-  1: [
-    {
-      delay: 0,
-      duration: 0.09,
-      frequency: warningPitch.frequency,
-      gain: 0.1,
-      overtone: warningPitch.overtone,
-      overtoneGain: 0.036,
-      waveform: 'square',
-    },
-  ],
+const countdownCueMap: Record<CountdownCueVariant, Record<1 | 2 | 3, ToneStep[]>> = {
+  start: {
+    3: [
+      {
+        delay: 0,
+        duration: 0.08,
+        frequency: warningPitch.frequency,
+        gain: 0.088,
+        overtone: warningPitch.overtone,
+        overtoneGain: 0.032,
+        waveform: 'square',
+      },
+    ],
+    2: [
+      {
+        delay: 0,
+        duration: 0.08,
+        frequency: warningPitch.frequency,
+        gain: 0.092,
+        overtone: warningPitch.overtone,
+        overtoneGain: 0.034,
+        waveform: 'square',
+      },
+    ],
+    1: [
+      {
+        delay: 0,
+        duration: 0.09,
+        frequency: warningPitch.frequency,
+        gain: 0.1,
+        overtone: warningPitch.overtone,
+        overtoneGain: 0.036,
+        waveform: 'square',
+      },
+    ],
+  },
+  finish: {
+    3: [
+      {
+        delay: 0,
+        duration: 0.11,
+        frequency: 1180,
+        gain: 0.082,
+        overtone: 590,
+        overtoneGain: 0.026,
+        waveform: 'triangle',
+      },
+    ],
+    2: [
+      {
+        delay: 0,
+        duration: 0.11,
+        frequency: 980,
+        gain: 0.086,
+        overtone: 490,
+        overtoneGain: 0.028,
+        waveform: 'triangle',
+      },
+    ],
+    1: [
+      {
+        delay: 0,
+        duration: 0.13,
+        frequency: 820,
+        gain: 0.092,
+        overtone: 410,
+        overtoneGain: 0.03,
+        waveform: 'triangle',
+      },
+    ],
+  },
 }
 
 export function createAudioCuePlayer(): AudioCuePlayer {
@@ -250,7 +293,11 @@ export function createAudioCuePlayer(): AudioCuePlayer {
     }
   }
 
-  const playCountdownTick = async (second: number, enabled: boolean) => {
+  const playCountdownTick = async (
+    second: number,
+    enabled: boolean,
+    variant: CountdownCueVariant = 'start',
+  ) => {
     if (!enabled || second < 1 || second > 3) {
       return
     }
@@ -262,7 +309,7 @@ export function createAudioCuePlayer(): AudioCuePlayer {
 
     const startAt = ctx.currentTime + 0.01
 
-    for (const step of countdownCueMap[second as 1 | 2 | 3]) {
+    for (const step of countdownCueMap[variant][second as 1 | 2 | 3]) {
       const toneStart = startAt + step.delay
       scheduleTone(
         ctx,

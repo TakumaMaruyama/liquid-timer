@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   getCountdownCueSeconds,
+  isFinalIntervalStep,
   pauseSession,
   resumeSession,
   rewindPhase,
@@ -58,6 +59,18 @@ describe('timerSession', () => {
     expect(getCountdownCueSeconds(3200, 1800)).toEqual([3, 2])
     expect(getCountdownCueSeconds(1900, 900)).toEqual([1])
     expect(getCountdownCueSeconds(900, 0)).toEqual([])
+  })
+
+  it('identifies the final interval separately from earlier intervals', () => {
+    let session = startSession(workout, 0)
+    session = tickSession(session, 4000).state
+    expect(isFinalIntervalStep(session)).toBe(false)
+
+    session = tickSession(session, 40000).state
+    expect(session.phase).toBe('interval')
+    expect(session.currentRound).toBe(2)
+    expect(session.currentRep).toBe(2)
+    expect(isFinalIntervalStep(session)).toBe(true)
   })
 
   it('preserves remaining time across pause and resume', () => {

@@ -350,6 +350,14 @@ export function getCountdownCueSeconds(
   return cues
 }
 
+export function isFinalIntervalStep(session: WorkoutSession) {
+  return (
+    session.phase === 'interval' &&
+    session.timeline.length > 0 &&
+    session.cursor === session.timeline.length - 1
+  )
+}
+
 export function formatRoundLabel(currentRound: number, totalRounds: number) {
   return `セット ${currentRound}/${totalRounds}`
 }

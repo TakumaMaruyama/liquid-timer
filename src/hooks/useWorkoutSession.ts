@@ -6,6 +6,7 @@ import {
 import {
   createIdleSession,
   getCountdownCueSeconds,
+  isFinalIntervalStep,
   isRunningPhase,
   pauseSession,
   resetSession,
@@ -36,6 +37,8 @@ export function useWorkoutSession(workout: QuickWorkoutInput) {
   if (audioPlayerRef.current === null) {
     audioPlayerRef.current = createAudioCuePlayer()
   }
+
+  const countdownVariant = isFinalIntervalStep(session) ? 'finish' : 'start'
 
   useEffect(() => {
     sessionRef.current = session
@@ -118,7 +121,6 @@ export function useWorkoutSession(workout: QuickWorkoutInput) {
 
     const currentSecond = Math.ceil(session.remainingMs / 1000)
     const tracker = countdownTrackerRef.current
-
     if (tracker.cursor !== session.cursor) {
       countdownTrackerRef.current = {
         cursor: session.cursor,
@@ -126,7 +128,11 @@ export function useWorkoutSession(workout: QuickWorkoutInput) {
       }
 
       if (currentSecond >= 1 && currentSecond <= 3) {
-        void audioPlayerRef.current?.playCountdownTick(currentSecond, workout.audioEnabled)
+        void audioPlayerRef.current?.playCountdownTick(
+          currentSecond,
+          workout.audioEnabled,
+          countdownVariant,
+        )
       }
 
       return
@@ -139,9 +145,20 @@ export function useWorkoutSession(workout: QuickWorkoutInput) {
     }
 
     for (const second of crossedSeconds) {
-      void audioPlayerRef.current?.playCountdownTick(second, workout.audioEnabled)
+      void audioPlayerRef.current?.playCountdownTick(
+        second,
+        workout.audioEnabled,
+        countdownVariant,
+      )
     }
-  }, [session.cursor, session.phase, session.remainingMs, workout.audioEnabled])
+  }, [
+    countdownVariant,
+    session.cursor,
+    session.phase,
+    session.remainingMs,
+    session.timeline.length,
+    workout.audioEnabled,
+  ])
 
   const start = async () => {
     await audioPlayerRef.current?.unlock()
