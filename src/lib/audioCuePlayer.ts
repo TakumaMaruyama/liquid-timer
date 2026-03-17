@@ -10,15 +10,65 @@ interface ToneStep {
   duration: number
   frequency: number
   gain: number
+  overtone?: number
+  overtoneGain?: number
+  waveform: OscillatorType
 }
 
 const cueMap: Record<CueEvent, ToneStep[]> = {
-  five_second_warning: [{ delay: 0, duration: 0.07, frequency: 880, gain: 0.04 }],
-  phase_switch: [{ delay: 0, duration: 0.11, frequency: 640, gain: 0.05 }],
+  five_second_warning: [
+    {
+      delay: 0,
+      duration: 0.09,
+      frequency: 1760,
+      gain: 0.085,
+      overtone: 880,
+      overtoneGain: 0.03,
+      waveform: 'square',
+    },
+    {
+      delay: 0.16,
+      duration: 0.09,
+      frequency: 1760,
+      gain: 0.085,
+      overtone: 880,
+      overtoneGain: 0.03,
+      waveform: 'square',
+    },
+  ],
+  phase_switch: [
+    {
+      delay: 0,
+      duration: 0.13,
+      frequency: 1180,
+      gain: 0.075,
+      overtone: 590,
+      overtoneGain: 0.024,
+      waveform: 'square',
+    },
+  ],
   workout_complete: [
-    { delay: 0, duration: 0.1, frequency: 520, gain: 0.045 },
-    { delay: 0.14, duration: 0.11, frequency: 660, gain: 0.05 },
-    { delay: 0.28, duration: 0.16, frequency: 820, gain: 0.055 },
+    {
+      delay: 0,
+      duration: 0.1,
+      frequency: 740,
+      gain: 0.055,
+      waveform: 'triangle',
+    },
+    {
+      delay: 0.14,
+      duration: 0.1,
+      frequency: 980,
+      gain: 0.06,
+      waveform: 'triangle',
+    },
+    {
+      delay: 0.28,
+      duration: 0.18,
+      frequency: 1320,
+      gain: 0.065,
+      waveform: 'triangle',
+    },
   ],
 }
 
@@ -65,6 +115,27 @@ export function createAudioCuePlayer(): AudioCuePlayer {
     return ctx.state === 'running'
   }
 
+  const scheduleTone = (
+    ctx: AudioContext,
+    startAt: number,
+    frequency: number,
+    duration: number,
+    gain: number,
+    waveform: OscillatorType,
+  ) => {
+    const oscillator = ctx.createOscillator()
+    const gainNode = ctx.createGain()
+    oscillator.type = waveform
+    oscillator.frequency.setValueAtTime(frequency, startAt)
+    gainNode.gain.setValueAtTime(0.0001, startAt)
+    gainNode.gain.linearRampToValueAtTime(gain, startAt + 0.008)
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, startAt + duration)
+    oscillator.connect(gainNode)
+    gainNode.connect(ctx.destination)
+    oscillator.start(startAt)
+    oscillator.stop(startAt + duration + 0.02)
+  }
+
   const play = async (event: CueEvent, enabled: boolean) => {
     if (!enabled) {
       return
@@ -78,20 +149,26 @@ export function createAudioCuePlayer(): AudioCuePlayer {
     const startAt = ctx.currentTime + 0.01
 
     for (const step of cueMap[event]) {
-      const oscillator = ctx.createOscillator()
-      const gainNode = ctx.createGain()
-      oscillator.type = event === 'phase_switch' ? 'triangle' : 'sine'
-      oscillator.frequency.setValueAtTime(step.frequency, startAt + step.delay)
-      gainNode.gain.setValueAtTime(0.0001, startAt + step.delay)
-      gainNode.gain.linearRampToValueAtTime(step.gain, startAt + step.delay + 0.01)
-      gainNode.gain.exponentialRampToValueAtTime(
-        0.0001,
-        startAt + step.delay + step.duration,
+      const toneStart = startAt + step.delay
+      scheduleTone(
+        ctx,
+        toneStart,
+        step.frequency,
+        step.duration,
+        step.gain,
+        step.waveform,
       )
-      oscillator.connect(gainNode)
-      gainNode.connect(ctx.destination)
-      oscillator.start(startAt + step.delay)
-      oscillator.stop(startAt + step.delay + step.duration + 0.02)
+
+      if (step.overtone && step.overtoneGain) {
+        scheduleTone(
+          ctx,
+          toneStart,
+          step.overtone,
+          step.duration,
+          step.overtoneGain,
+          'triangle',
+        )
+      }
     }
   }
 

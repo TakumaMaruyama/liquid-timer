@@ -43,11 +43,7 @@ export function RunScreen({ workout, onEdit }: RunScreenProps) {
     start,
     pause,
     resume,
-    rewind,
-    skip,
     reset,
-    canRewind,
-    canSkip,
     isRunning,
     isWarningWindow,
   } = useWorkoutSession(workout)
@@ -120,22 +116,6 @@ export function RunScreen({ workout, onEdit }: RunScreenProps) {
             onClick={primaryAction}
           >
             {getPrimaryActionLabel(displayPhase)}
-          </button>
-          <button
-            className="controlButton controlButton--secondary"
-            type="button"
-            onClick={rewind}
-            disabled={!canRewind}
-          >
-            戻る
-          </button>
-          <button
-            className="controlButton controlButton--secondary"
-            type="button"
-            onClick={skip}
-            disabled={!canSkip}
-          >
-            スキップ
           </button>
           <button className="controlButton controlButton--danger" type="button" onClick={reset}>
             リセット

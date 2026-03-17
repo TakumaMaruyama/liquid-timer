@@ -2,16 +2,18 @@ import { startTransition, useState } from 'react'
 import './App.css'
 import { RunScreen } from './components/RunScreen'
 import { SetupScreen } from './components/SetupScreen'
-import { DEFAULT_WORKOUT, normalizeWorkoutInput, type QuickWorkoutInput } from './lib/timerSession'
+import { usePresetStore } from './hooks/usePresetStore'
+import { normalizeWorkoutInput, type QuickWorkoutInput } from './lib/timerSession'
 
 function App() {
-  const [draft, setDraft] = useState<QuickWorkoutInput>(DEFAULT_WORKOUT)
-  const [activeWorkout, setActiveWorkout] = useState<QuickWorkoutInput>(DEFAULT_WORKOUT)
+  const presetStore = usePresetStore()
+  const [activeWorkout, setActiveWorkout] = useState<QuickWorkoutInput>(() =>
+    normalizeWorkoutInput(presetStore.selectedPreset.workout),
+  )
   const [screen, setScreen] = useState<'setup' | 'run'>('setup')
 
   const handleLaunch = () => {
-    const normalized = normalizeWorkoutInput(draft)
-    setDraft(normalized)
+    const normalized = normalizeWorkoutInput(presetStore.selectedPreset.workout)
     setActiveWorkout(normalized)
     startTransition(() => {
       setScreen('run')
@@ -27,7 +29,7 @@ function App() {
   return (
     <main className={`app app--${screen}`}>
       {screen === 'setup' ? (
-        <SetupScreen draft={draft} onChange={setDraft} onLaunch={handleLaunch} />
+        <SetupScreen presetStore={presetStore} onLaunch={handleLaunch} />
       ) : (
         <RunScreen workout={activeWorkout} onEdit={handleEdit} />
       )}

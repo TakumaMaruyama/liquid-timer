@@ -71,7 +71,7 @@ export function LaneTank({ session, workout }: LaneTankProps) {
 
                     let fill = isDone ? 1 : 0
 
-                    if (isActiveRep) {
+                    if (isActiveRep && effectivePhase === 'interval') {
                       fill = activeProgress
                     }
 

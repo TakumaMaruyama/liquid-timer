@@ -9,8 +9,6 @@ import {
   pauseSession,
   resetSession,
   resumeSession,
-  rewindPhase,
-  skipPhase,
   startSession,
   tickSession,
   type CueEvent,
@@ -116,25 +114,10 @@ export function useWorkoutSession(workout: QuickWorkoutInput) {
     commitTransition(transition.state, transition.events)
   }
 
-  const rewind = () => {
-    const transition = rewindPhase(sessionRef.current, Date.now())
-    commitTransition(transition.state, transition.events)
-  }
-
-  const skip = () => {
-    const transition = skipPhase(sessionRef.current, Date.now())
-    commitTransition(transition.state, transition.events)
-  }
-
   const reset = () => {
     const nextSession = resetSession(workout)
     commitTransition(nextSession, [])
   }
-
-  const canRewind =
-    session.phase !== 'idle' &&
-    !(session.phase === 'complete' && session.timeline.length === 0)
-  const canSkip = session.phase !== 'idle' && session.phase !== 'complete'
 
   return {
     session,
@@ -142,11 +125,7 @@ export function useWorkoutSession(workout: QuickWorkoutInput) {
     start,
     pause,
     resume,
-    rewind,
-    skip,
     reset,
-    canRewind,
-    canSkip,
     isRunning: isRunningPhase(session.phase),
     isWarningWindow:
       isRunningPhase(session.phase) &&
