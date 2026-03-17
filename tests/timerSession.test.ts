@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  getCountdownCueSeconds,
   pauseSession,
   resumeSession,
   rewindPhase,
@@ -50,6 +51,13 @@ describe('timerSession', () => {
 
     const secondWarning = tickSession(firstWarning.state, 9500)
     expect(secondWarning.events).not.toContain('five_second_warning')
+  })
+
+  it('detects countdown cue seconds for 3, 2, and 1', () => {
+    expect(getCountdownCueSeconds(4000, 2990)).toEqual([3])
+    expect(getCountdownCueSeconds(3200, 1800)).toEqual([3, 2])
+    expect(getCountdownCueSeconds(1900, 900)).toEqual([1])
+    expect(getCountdownCueSeconds(900, 0)).toEqual([])
   })
 
   it('preserves remaining time across pause and resume', () => {

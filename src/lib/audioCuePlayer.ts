@@ -3,6 +3,7 @@ import type { CueEvent } from './timerSession'
 export interface AudioCuePlayer {
   unlock: () => Promise<boolean>
   play: (event: CueEvent, enabled: boolean) => Promise<void>
+  playCountdownTick: (second: number, enabled: boolean) => Promise<void>
 }
 
 interface ToneStep {
@@ -68,6 +69,42 @@ const cueMap: Record<CueEvent, ToneStep[]> = {
       frequency: 1320,
       gain: 0.065,
       waveform: 'triangle',
+    },
+  ],
+}
+
+const countdownCueMap: Record<1 | 2 | 3, ToneStep[]> = {
+  3: [
+    {
+      delay: 0,
+      duration: 0.08,
+      frequency: 1360,
+      gain: 0.07,
+      overtone: 680,
+      overtoneGain: 0.024,
+      waveform: 'square',
+    },
+  ],
+  2: [
+    {
+      delay: 0,
+      duration: 0.08,
+      frequency: 1520,
+      gain: 0.074,
+      overtone: 760,
+      overtoneGain: 0.026,
+      waveform: 'square',
+    },
+  ],
+  1: [
+    {
+      delay: 0,
+      duration: 0.09,
+      frequency: 1720,
+      gain: 0.082,
+      overtone: 860,
+      overtoneGain: 0.03,
+      waveform: 'square',
     },
   ],
 }
@@ -172,8 +209,45 @@ export function createAudioCuePlayer(): AudioCuePlayer {
     }
   }
 
+  const playCountdownTick = async (second: number, enabled: boolean) => {
+    if (!enabled || second < 1 || second > 3) {
+      return
+    }
+
+    const ctx = await ensureContext()
+    if (!ctx || ctx.state !== 'running') {
+      return
+    }
+
+    const startAt = ctx.currentTime + 0.01
+
+    for (const step of countdownCueMap[second as 1 | 2 | 3]) {
+      const toneStart = startAt + step.delay
+      scheduleTone(
+        ctx,
+        toneStart,
+        step.frequency,
+        step.duration,
+        step.gain,
+        step.waveform,
+      )
+
+      if (step.overtone && step.overtoneGain) {
+        scheduleTone(
+          ctx,
+          toneStart,
+          step.overtone,
+          step.duration,
+          step.overtoneGain,
+          'triangle',
+        )
+      }
+    }
+  }
+
   return {
     unlock,
     play,
+    playCountdownTick,
   }
 }

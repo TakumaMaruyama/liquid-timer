@@ -5,6 +5,7 @@ import {
 } from '../lib/audioCuePlayer'
 import {
   createIdleSession,
+  getCountdownCueSeconds,
   isRunningPhase,
   pauseSession,
   resetSession,
@@ -27,6 +28,10 @@ export function useWorkoutSession(workout: QuickWorkoutInput) {
   const audioPlayerRef = useRef<AudioCuePlayer | null>(null)
   const cueTimeoutRef = useRef<number | null>(null)
   const sessionRef = useRef(session)
+  const countdownTrackerRef = useRef<{ cursor: number; remainingMs: number }>({
+    cursor: -1,
+    remainingMs: 0,
+  })
 
   if (audioPlayerRef.current === null) {
     audioPlayerRef.current = createAudioCuePlayer()
@@ -35,6 +40,15 @@ export function useWorkoutSession(workout: QuickWorkoutInput) {
   useEffect(() => {
     sessionRef.current = session
   }, [session])
+
+  useEffect(() => {
+    if (session.phase === 'idle' || session.phase === 'complete') {
+      countdownTrackerRef.current = {
+        cursor: -1,
+        remainingMs: 0,
+      }
+    }
+  }, [session.phase])
 
   useEffect(() => {
     return () => {
@@ -96,6 +110,38 @@ export function useWorkoutSession(workout: QuickWorkoutInput) {
       window.cancelAnimationFrame(frameId)
     }
   }, [commitTransition, session.phase])
+
+  useEffect(() => {
+    if (!isRunningPhase(session.phase)) {
+      return
+    }
+
+    const currentSecond = Math.ceil(session.remainingMs / 1000)
+    const tracker = countdownTrackerRef.current
+
+    if (tracker.cursor !== session.cursor) {
+      countdownTrackerRef.current = {
+        cursor: session.cursor,
+        remainingMs: session.remainingMs,
+      }
+
+      if (currentSecond >= 1 && currentSecond <= 3) {
+        void audioPlayerRef.current?.playCountdownTick(currentSecond, workout.audioEnabled)
+      }
+
+      return
+    }
+
+    const crossedSeconds = getCountdownCueSeconds(tracker.remainingMs, session.remainingMs)
+    countdownTrackerRef.current = {
+      cursor: session.cursor,
+      remainingMs: session.remainingMs,
+    }
+
+    for (const second of crossedSeconds) {
+      void audioPlayerRef.current?.playCountdownTick(second, workout.audioEnabled)
+    }
+  }, [session.cursor, session.phase, session.remainingMs, workout.audioEnabled])
 
   const start = async () => {
     await audioPlayerRef.current?.unlock()

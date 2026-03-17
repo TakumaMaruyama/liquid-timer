@@ -328,6 +328,28 @@ export function formatSecondsDisplay(remainingMs: number) {
   return Math.max(0, Math.ceil(remainingMs / 1000)).toString()
 }
 
+export function getCountdownCueSeconds(
+  previousRemainingMs: number,
+  currentRemainingMs: number,
+) {
+  const previousSecond = Math.ceil(Math.max(0, previousRemainingMs) / 1000)
+  const currentSecond = Math.ceil(Math.max(0, currentRemainingMs) / 1000)
+
+  if (currentSecond <= 0 || previousSecond <= currentSecond) {
+    return []
+  }
+
+  const cues: number[] = []
+  const startSecond = Math.min(3, previousSecond - 1)
+  const endSecond = Math.max(1, currentSecond)
+
+  for (let second = startSecond; second >= endSecond; second -= 1) {
+    cues.push(second)
+  }
+
+  return cues
+}
+
 export function formatRoundLabel(currentRound: number, totalRounds: number) {
   return `セット ${currentRound}/${totalRounds}`
 }
