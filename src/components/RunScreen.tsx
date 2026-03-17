@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { LaneTank } from './LaneTank'
 import { useWorkoutSession } from '../hooks/useWorkoutSession'
 import {
@@ -15,6 +16,10 @@ interface RunScreenProps {
   workout: QuickWorkoutInput
   onEdit: () => void
 }
+
+type TimerDisplayMode = 'seconds' | 'minutes_seconds'
+
+const DISPLAY_MODE_STORAGE_KEY = 'poolside-timer.display-mode'
 
 function getPrimaryActionLabel(phase: ReturnType<typeof getEffectivePhase>) {
   switch (phase) {
@@ -36,7 +41,27 @@ function getPrimaryActionTone(phase: ReturnType<typeof getEffectivePhase>) {
     : 'controlButton--primary'
 }
 
+function loadDisplayMode(): TimerDisplayMode {
+  if (typeof window === 'undefined') {
+    return 'seconds'
+  }
+
+  const stored = window.localStorage.getItem(DISPLAY_MODE_STORAGE_KEY)
+  return stored === 'minutes_seconds' ? 'minutes_seconds' : 'seconds'
+}
+
+function formatMainDisplay(remainingMs: number, displayMode: TimerDisplayMode) {
+  return displayMode === 'minutes_seconds'
+    ? formatDurationLabel(remainingMs / 1000)
+    : formatSecondsDisplay(remainingMs)
+}
+
+function getDisplayModeLabel(displayMode: TimerDisplayMode) {
+  return displayMode === 'minutes_seconds' ? '表示: 分:秒' : '表示: 秒'
+}
+
 export function RunScreen({ workout, onEdit }: RunScreenProps) {
+  const [displayMode, setDisplayMode] = useState<TimerDisplayMode>(() => loadDisplayMode())
   const {
     session,
     visualCue,
@@ -51,6 +76,11 @@ export function RunScreen({ workout, onEdit }: RunScreenProps) {
   const effectivePhase = getEffectivePhase(session)
   const displayPhase = session.phase === 'paused' ? 'paused' : effectivePhase
   const totalReps = workout.rounds * workout.repsPerRound
+  const mainDisplay = formatMainDisplay(session.remainingMs, displayMode)
+  const secondaryTimeLabel =
+    displayMode === 'minutes_seconds'
+      ? `残り ${formatSecondsDisplay(session.remainingMs)}秒`
+      : `あと ${formatDurationLabel(session.remainingMs / 1000)}`
   const absoluteRep =
     session.phase === 'idle'
       ? 1
@@ -66,6 +96,14 @@ export function RunScreen({ workout, onEdit }: RunScreenProps) {
         ? pause
         : start
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    window.localStorage.setItem(DISPLAY_MODE_STORAGE_KEY, displayMode)
+  }, [displayMode])
+
   return (
     <section className="runScreen">
       <div
@@ -75,12 +113,23 @@ export function RunScreen({ workout, onEdit }: RunScreenProps) {
       >
         <header className="runScreen__header">
           <div>
-            <div className="runScreen__eyebrow">プールサイド共有タイマー</div>
+            <div className="runScreen__eyebrow">プールサイドタイマー</div>
             <h1 className="runScreen__title">{workout.title}</h1>
           </div>
           <div className="runScreen__headerMeta">
             <span>{workout.rounds}セット</span>
             <span>{totalReps}本</span>
+            <button
+              className="runScreen__headerToggle"
+              type="button"
+              onClick={() =>
+                setDisplayMode((current) =>
+                  current === 'seconds' ? 'minutes_seconds' : 'seconds',
+                )
+              }
+            >
+              {getDisplayModeLabel(displayMode)}
+            </button>
           </div>
         </header>
 
@@ -97,12 +146,18 @@ export function RunScreen({ workout, onEdit }: RunScreenProps) {
             </div>
 
             <div className="timerHero__display" aria-live="polite">
-              <div className="timerHero__value">{formatSecondsDisplay(session.remainingMs)}</div>
-              <div className="timerHero__unit">秒</div>
+              <div
+                className={`timerHero__value${
+                  displayMode === 'minutes_seconds' ? ' timerHero__value--clock' : ''
+                }`}
+              >
+                {mainDisplay}
+              </div>
+              {displayMode === 'seconds' && <div className="timerHero__unit">秒</div>}
             </div>
 
             <div className="timerHero__subvalue">
-              あと {formatDurationLabel(session.remainingMs / 1000)} ・ 進行 {absoluteRep}/{totalReps}
+              {secondaryTimeLabel} ・ 進行 {absoluteRep}/{totalReps}
             </div>
           </section>
 

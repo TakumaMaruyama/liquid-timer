@@ -464,6 +464,33 @@
   color: var(--color-accent-strong);
 }
 
+.runScreen__headerToggle {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.78rem;
+  border-radius: 999px;
+  border: 1px solid rgba(92, 211, 255, 0.18);
+  background: rgba(92, 211, 255, 0.12);
+  color: var(--color-accent-strong);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.runScreen__headerToggle:hover,
+.runScreen__headerToggle:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(92, 211, 255, 0.42);
+  background: rgba(92, 211, 255, 0.18);
+  outline: none;
+}
+
 .runScreen__main {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
@@ -476,6 +503,7 @@
   display: grid;
   gap: 0.85rem;
   align-content: center;
+  justify-items: center;
   min-height: 17rem;
   padding: 1.2rem 1.35rem;
   border-radius: 1.65rem;
@@ -487,6 +515,7 @@
 .timerHero__meta {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.55rem;
 }
 
@@ -494,11 +523,14 @@
   font-size: clamp(1.15rem, 1.7vw, 1.5rem);
   color: var(--color-muted);
   letter-spacing: 0.02em;
+  text-align: center;
 }
 
 .timerHero__display {
   display: flex;
   align-items: flex-end;
+  justify-content: center;
+  width: 100%;
   gap: 0.85rem;
 }
 
@@ -510,6 +542,11 @@
   letter-spacing: -0.07em;
   font-weight: 800;
   text-shadow: 0 0 2rem rgba(92, 211, 255, 0.16);
+}
+
+.timerHero__value--clock {
+  font-size: clamp(5.8rem, 16vw, 10rem);
+  letter-spacing: -0.05em;
 }
 
 .timerHero__unit {
@@ -524,6 +561,7 @@
   color: var(--color-text);
   font-size: clamp(1rem, 1.6vw, 1.2rem);
   letter-spacing: 0.06em;
+  text-align: center;
 }
 
 .laneTank {
