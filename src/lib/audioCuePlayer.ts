@@ -16,10 +16,17 @@ interface ToneStep {
   waveform: OscillatorType
 }
 
+interface OutputBus {
+  input: DynamicsCompressorNode
+  master: GainNode
+}
+
 const warningPitch = {
   frequency: 1760,
   overtone: 880,
 }
+
+const MASTER_OUTPUT_GAIN = 1.55
 
 const cueMap: Record<CueEvent, ToneStep[]> = {
   five_second_warning: [
@@ -27,18 +34,18 @@ const cueMap: Record<CueEvent, ToneStep[]> = {
       delay: 0,
       duration: 0.09,
       frequency: warningPitch.frequency,
-      gain: 0.085,
+      gain: 0.1,
       overtone: warningPitch.overtone,
-      overtoneGain: 0.03,
+      overtoneGain: 0.036,
       waveform: 'square',
     },
     {
       delay: 0.16,
       duration: 0.09,
       frequency: warningPitch.frequency,
-      gain: 0.085,
+      gain: 0.1,
       overtone: warningPitch.overtone,
-      overtoneGain: 0.03,
+      overtoneGain: 0.036,
       waveform: 'square',
     },
   ],
@@ -47,9 +54,9 @@ const cueMap: Record<CueEvent, ToneStep[]> = {
       delay: 0,
       duration: 0.13,
       frequency: 1180,
-      gain: 0.075,
+      gain: 0.092,
       overtone: 590,
-      overtoneGain: 0.024,
+      overtoneGain: 0.03,
       waveform: 'square',
     },
   ],
@@ -58,21 +65,21 @@ const cueMap: Record<CueEvent, ToneStep[]> = {
       delay: 0,
       duration: 0.1,
       frequency: 740,
-      gain: 0.055,
+      gain: 0.072,
       waveform: 'triangle',
     },
     {
       delay: 0.14,
       duration: 0.1,
       frequency: 980,
-      gain: 0.06,
+      gain: 0.078,
       waveform: 'triangle',
     },
     {
       delay: 0.28,
       duration: 0.18,
       frequency: 1320,
-      gain: 0.065,
+      gain: 0.085,
       waveform: 'triangle',
     },
   ],
@@ -84,9 +91,9 @@ const countdownCueMap: Record<1 | 2 | 3, ToneStep[]> = {
       delay: 0,
       duration: 0.08,
       frequency: warningPitch.frequency,
-      gain: 0.07,
+      gain: 0.088,
       overtone: warningPitch.overtone,
-      overtoneGain: 0.024,
+      overtoneGain: 0.032,
       waveform: 'square',
     },
   ],
@@ -95,9 +102,9 @@ const countdownCueMap: Record<1 | 2 | 3, ToneStep[]> = {
       delay: 0,
       duration: 0.08,
       frequency: warningPitch.frequency,
-      gain: 0.074,
+      gain: 0.092,
       overtone: warningPitch.overtone,
-      overtoneGain: 0.026,
+      overtoneGain: 0.034,
       waveform: 'square',
     },
   ],
@@ -106,9 +113,9 @@ const countdownCueMap: Record<1 | 2 | 3, ToneStep[]> = {
       delay: 0,
       duration: 0.09,
       frequency: warningPitch.frequency,
-      gain: 0.082,
+      gain: 0.1,
       overtone: warningPitch.overtone,
-      overtoneGain: 0.03,
+      overtoneGain: 0.036,
       waveform: 'square',
     },
   ],
@@ -116,6 +123,7 @@ const countdownCueMap: Record<1 | 2 | 3, ToneStep[]> = {
 
 export function createAudioCuePlayer(): AudioCuePlayer {
   let context: AudioContext | null = null
+  let outputBus: OutputBus | null = null
 
   const ensureContext = async () => {
     if (typeof window === 'undefined' || !('AudioContext' in window)) {
@@ -144,10 +152,11 @@ export function createAudioCuePlayer(): AudioCuePlayer {
     try {
       const oscillator = ctx.createOscillator()
       const gainNode = ctx.createGain()
+      const bus = ensureOutputBus(ctx)
       gainNode.gain.setValueAtTime(0.0001, ctx.currentTime)
       oscillator.frequency.setValueAtTime(440, ctx.currentTime)
       oscillator.connect(gainNode)
-      gainNode.connect(ctx.destination)
+      gainNode.connect(bus.input)
       oscillator.start(ctx.currentTime)
       oscillator.stop(ctx.currentTime + 0.01)
     } catch {
@@ -167,15 +176,42 @@ export function createAudioCuePlayer(): AudioCuePlayer {
   ) => {
     const oscillator = ctx.createOscillator()
     const gainNode = ctx.createGain()
+    const bus = ensureOutputBus(ctx)
     oscillator.type = waveform
     oscillator.frequency.setValueAtTime(frequency, startAt)
     gainNode.gain.setValueAtTime(0.0001, startAt)
     gainNode.gain.linearRampToValueAtTime(gain, startAt + 0.008)
     gainNode.gain.exponentialRampToValueAtTime(0.0001, startAt + duration)
     oscillator.connect(gainNode)
-    gainNode.connect(ctx.destination)
+    gainNode.connect(bus.input)
     oscillator.start(startAt)
     oscillator.stop(startAt + duration + 0.02)
+  }
+
+  const ensureOutputBus = (ctx: AudioContext) => {
+    if (outputBus) {
+      return outputBus
+    }
+
+    const compressor = ctx.createDynamicsCompressor()
+    compressor.threshold.setValueAtTime(-22, ctx.currentTime)
+    compressor.knee.setValueAtTime(10, ctx.currentTime)
+    compressor.ratio.setValueAtTime(4, ctx.currentTime)
+    compressor.attack.setValueAtTime(0.003, ctx.currentTime)
+    compressor.release.setValueAtTime(0.14, ctx.currentTime)
+
+    const master = ctx.createGain()
+    master.gain.setValueAtTime(MASTER_OUTPUT_GAIN, ctx.currentTime)
+
+    compressor.connect(master)
+    master.connect(ctx.destination)
+
+    outputBus = {
+      input: compressor,
+      master,
+    }
+
+    return outputBus
   }
 
   const play = async (event: CueEvent, enabled: boolean) => {
