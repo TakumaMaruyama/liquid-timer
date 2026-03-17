@@ -2,51 +2,38 @@ import { LaneTank } from './LaneTank'
 import { useWorkoutSession } from '../hooks/useWorkoutSession'
 import {
   formatDurationLabel,
-  formatRoundLabel,
   formatSecondsDisplay,
-  getCurrentStep,
   getEffectivePhase,
-  getStepProgress,
   type QuickWorkoutInput,
 } from '../lib/timerSession'
+import {
+  getJapanesePhaseHeadline,
+  getJapanesePhaseLabel,
+} from '../lib/uiLabels'
 
 interface RunScreenProps {
   workout: QuickWorkoutInput
   onEdit: () => void
 }
 
-function phaseHeading(phase: ReturnType<typeof getEffectivePhase>) {
+function getPrimaryActionLabel(phase: ReturnType<typeof getEffectivePhase>) {
   switch (phase) {
-    case 'lead_in':
-      return 'Lead-in'
-    case 'interval':
-      return 'Next Start'
-    case 'round_rest':
-      return 'Round Rest'
     case 'paused':
-      return 'Paused'
-    case 'complete':
-      return 'Complete'
+      return '再開'
+    case 'lead_in':
+    case 'interval':
+    case 'round_rest':
+      return '一時停止'
     case 'idle':
-      return 'Ready'
+    case 'complete':
+      return '開始'
   }
 }
 
-function phaseCopy(phase: ReturnType<typeof getEffectivePhase>) {
-  switch (phase) {
-    case 'lead_in':
-      return '全体スタートまでのカウント。合図と同時に1本目へ入る。'
-    case 'interval':
-      return '大きい数字は次の出発まで。液体が満ち切ると次の本へ進む。'
-    case 'round_rest':
-      return 'ラウンド間の休憩。縦のゲートが満ちると次ラウンドが始まる。'
-    case 'paused':
-      return '進行を停止中。残り時間と液体位置はここで固定される。'
-    case 'complete':
-      return 'メニュー終了。開始を押すと同じセットをもう一度流せる。'
-    case 'idle':
-      return 'レーンが整ったら開始。音は最初の開始操作でアンロックする。'
-  }
+function getPrimaryActionTone(phase: ReturnType<typeof getEffectivePhase>) {
+  return phase === 'lead_in' || phase === 'interval' || phase === 'round_rest'
+    ? 'controlButton--secondary'
+    : 'controlButton--primary'
 }
 
 export function RunScreen({ workout, onEdit }: RunScreenProps) {
@@ -65,10 +52,8 @@ export function RunScreen({ workout, onEdit }: RunScreenProps) {
     isWarningWindow,
   } = useWorkoutSession(workout)
 
-  const step = getCurrentStep(session)
   const effectivePhase = getEffectivePhase(session)
   const displayPhase = session.phase === 'paused' ? 'paused' : effectivePhase
-  const progress = getStepProgress(session)
   const totalReps = workout.rounds * workout.repsPerRound
   const absoluteRep =
     session.phase === 'idle'
@@ -78,6 +63,13 @@ export function RunScreen({ workout, onEdit }: RunScreenProps) {
           (session.currentRound - 1) * workout.repsPerRound + session.currentRep,
         )
 
+  const primaryAction =
+    session.phase === 'paused'
+      ? resume
+      : isRunning
+        ? pause
+        : start
+
   return (
     <section className="runScreen">
       <div
@@ -85,68 +77,36 @@ export function RunScreen({ workout, onEdit }: RunScreenProps) {
         data-cue={visualCue ?? undefined}
         data-warning={isWarningWindow}
       >
-        <header className="runScreen__topbar">
+        <header className="runScreen__header">
           <div>
-            <div className="runScreen__eyebrow">Poolside Display</div>
+            <div className="runScreen__eyebrow">プールサイド共有タイマー</div>
             <h1 className="runScreen__title">{workout.title}</h1>
-            <p className="runScreen__lead">遠距離視認を優先した単一共有 Liquid Timer。</p>
           </div>
-          <button className="controlButton controlButton--secondary" type="button" onClick={onEdit}>
-            設定を編集
-          </button>
+          <div className="runScreen__headerMeta">
+            <span>{workout.rounds}セット</span>
+            <span>{totalReps}本</span>
+          </div>
         </header>
 
-        <div className="runScreen__stage">
+        <div className="runScreen__main">
           <section className="timerHero">
             <div className="timerHero__meta">
-              <span className="timerChip">{phaseHeading(displayPhase)}</span>
-              <span className="timerChip">
-                {formatRoundLabel(session.currentRound, session.totalRounds)}
-              </span>
-              <span className="timerChip">
-                Rep {session.currentRep}/{session.totalRepsInRound}
-              </span>
+              <span className="timerChip">{getJapanesePhaseLabel(displayPhase)}</span>
+              <span className="timerChip">セット {session.currentRound}/{session.totalRounds}</span>
+              <span className="timerChip">本 {session.currentRep}/{session.totalRepsInRound}</span>
             </div>
 
-            <div>
-              <div className="runScreen__eyebrow">
-                {displayPhase === 'paused'
-                  ? 'Session Paused'
-                  : effectivePhase === 'interval'
-                  ? 'Next Start In'
-                  : effectivePhase === 'round_rest'
-                    ? 'Next Round In'
-                    : effectivePhase === 'lead_in'
-                      ? 'Session Starts In'
-                      : effectivePhase === 'complete'
-                        ? 'Workout Finished'
-                        : 'Tank Ready'}
-              </div>
-              <div className="timerHero__clockline">
-                <div className="timerHero__value">{formatSecondsDisplay(session.remainingMs)}</div>
-                <div className="timerHero__subvalue">
-                  {formatDurationLabel(session.remainingMs / 1000)}
-                </div>
-              </div>
-              <h2 className="timerHero__phase">{phaseHeading(displayPhase)}</h2>
-              <p className="timerHero__copy">{phaseCopy(displayPhase)}</p>
+            <div className="timerHero__headline">
+              {getJapanesePhaseHeadline(displayPhase)}
             </div>
 
-            <div className="timerHero__stats">
-              <div className="runStat">
-                <span className="metric__label">Progress</span>
-                <strong>
-                  {absoluteRep} / {totalReps}
-                </strong>
-              </div>
-              <div className="runStat">
-                <span className="metric__label">Phase Fill</span>
-                <strong>{Math.round(progress * 100)}%</strong>
-              </div>
-              <div className="runStat">
-                <span className="metric__label">Current Step</span>
-                <strong>{step?.phase === 'round_rest' ? 'Gate' : `Lane ${session.currentRep}`}</strong>
-              </div>
+            <div className="timerHero__display" aria-live="polite">
+              <div className="timerHero__value">{formatSecondsDisplay(session.remainingMs)}</div>
+              <div className="timerHero__unit">秒</div>
+            </div>
+
+            <div className="timerHero__subvalue">
+              あと {formatDurationLabel(session.remainingMs / 1000)} ・ 進行 {absoluteRep}/{totalReps}
             </div>
           </section>
 
@@ -154,24 +114,13 @@ export function RunScreen({ workout, onEdit }: RunScreenProps) {
         </div>
 
         <div className="runScreen__actions">
-          {(session.phase === 'idle' || session.phase === 'complete') && (
-            <button className="controlButton controlButton--primary" type="button" onClick={start}>
-              開始
-            </button>
-          )}
-
-          {isRunning && (
-            <button className="controlButton controlButton--secondary" type="button" onClick={pause}>
-              一時停止
-            </button>
-          )}
-
-          {session.phase === 'paused' && (
-            <button className="controlButton controlButton--primary" type="button" onClick={resume}>
-              再開
-            </button>
-          )}
-
+          <button
+            className={`controlButton ${getPrimaryActionTone(displayPhase)}`}
+            type="button"
+            onClick={primaryAction}
+          >
+            {getPrimaryActionLabel(displayPhase)}
+          </button>
           <button
             className="controlButton controlButton--secondary"
             type="button"
@@ -180,7 +129,6 @@ export function RunScreen({ workout, onEdit }: RunScreenProps) {
           >
             戻る
           </button>
-
           <button
             className="controlButton controlButton--secondary"
             type="button"
@@ -189,9 +137,11 @@ export function RunScreen({ workout, onEdit }: RunScreenProps) {
           >
             スキップ
           </button>
-
           <button className="controlButton controlButton--danger" type="button" onClick={reset}>
             リセット
+          </button>
+          <button className="controlButton controlButton--secondary" type="button" onClick={onEdit}>
+            設定に戻る
           </button>
         </div>
       </div>

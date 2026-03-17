@@ -6,6 +6,7 @@ import {
   type QuickWorkoutInput,
   type WorkoutSession,
 } from '../lib/timerSession'
+import { getTankBadgeLabel, type TankBadgeKind } from '../lib/uiLabels'
 
 interface LaneTankProps {
   session: WorkoutSession
@@ -18,31 +19,37 @@ function fillStyle(fill: number): CSSProperties {
   }
 }
 
+function getTankDensity(workout: QuickWorkoutInput) {
+  const totalUnits = workout.rounds * workout.repsPerRound + Math.max(0, workout.rounds - 1)
+  return totalUnits >= 24 || workout.repsPerRound >= 8 || workout.rounds >= 5
+}
+
 export function LaneTank({ session, workout }: LaneTankProps) {
   const step = getCurrentStep(session)
   const effectivePhase = getEffectivePhase(session)
   const activeProgress = getStepProgress(session)
+  const compact = getTankDensity(workout)
 
   return (
-    <section className="laneTank">
+    <section className={`laneTank${compact ? ' laneTank--compact' : ''}`}>
       <div className="laneTank__header">
         <div>
-          <div className="setupCard__eyebrow">Lane Tank</div>
-          <h2 className="laneTank__title">ラウンドごとの液体カプセル</h2>
+          <div className="setupCard__eyebrow">進行タンク</div>
+          <h2 className="laneTank__title">セットごとの液体表示</h2>
         </div>
         <div className="laneTank__summary">
-          {workout.rounds} rounds / {workout.repsPerRound} reps
+          {workout.rounds}セット / {workout.repsPerRound}本
         </div>
       </div>
 
-      <div className="laneTank__track" role="img" aria-label="Workout progress lane tank">
+      <div className="laneTank__track" role="img" aria-label="セット進行を示す液体タンク">
         {Array.from({ length: workout.rounds }, (_, roundIndex) => {
           const roundNumber = roundIndex + 1
 
           return (
             <Fragment key={`round-${roundNumber}`}>
               <div className="tankRound">
-                <div className="tankRound__label">Round {roundNumber}</div>
+                <div className="tankRound__label">{roundNumber}セット</div>
                 <div
                   className="tankRound__cells"
                   style={{ ['--rep-count' as string]: workout.repsPerRound }}
@@ -72,6 +79,15 @@ export function LaneTank({ session, workout }: LaneTankProps) {
                       fill = 1
                     }
 
+                    const badgeKind: TankBadgeKind =
+                      isActiveRep && step?.phase === 'lead_in'
+                        ? 'lead'
+                        : isActiveRep
+                          ? 'active'
+                          : isDone || session.phase === 'complete'
+                            ? 'done'
+                            : 'queued'
+
                     const cellClassName = [
                       'tankCell',
                       isDone || session.phase === 'complete' ? 'tankCell--done' : '',
@@ -87,13 +103,7 @@ export function LaneTank({ session, workout }: LaneTankProps) {
                         <div className="tankCell__liquid" style={fillStyle(fill)} />
                         <div className="tankCell__glass" />
                         <div className="tankCell__badge">
-                          {isActiveRep
-                            ? step?.phase === 'lead_in'
-                              ? 'Lead'
-                              : 'Live'
-                            : isDone || session.phase === 'complete'
-                              ? 'Done'
-                              : 'Queued'}
+                          {getTankBadgeLabel(badgeKind, compact)}
                         </div>
                       </div>
                     )
@@ -103,6 +113,7 @@ export function LaneTank({ session, workout }: LaneTankProps) {
 
               {roundNumber < workout.rounds && (
                 <RoundGate
+                  compact={compact}
                   active={
                     effectivePhase === 'round_rest' &&
                     session.currentRound === roundNumber + 1
@@ -125,15 +136,15 @@ export function LaneTank({ session, workout }: LaneTankProps) {
       <div className="laneTank__legend">
         <span>
           <i className="laneTank__legendDot laneTank__legendDot--live" />
-          current interval
+          進行中
         </span>
         <span>
           <i className="laneTank__legendDot laneTank__legendDot--done" />
-          completed reps
+          完了
         </span>
         <span>
           <i className="laneTank__legendDot laneTank__legendDot--rest" />
-          round rest gate
+          セット間
         </span>
       </div>
     </section>
@@ -143,17 +154,18 @@ export function LaneTank({ session, workout }: LaneTankProps) {
 interface RoundGateProps {
   active: boolean
   complete: boolean
+  compact: boolean
   progress: number
 }
 
-function RoundGate({ active, complete, progress }: RoundGateProps) {
+function RoundGate({ active, complete, compact, progress }: RoundGateProps) {
   return (
     <div
       className={['tankGate', active ? 'tankGate--active' : '', complete ? 'tankGate--done' : '']
         .filter(Boolean)
         .join(' ')}
     >
-      <div className="tankGate__label">Rest</div>
+      <div className="tankGate__label">{compact ? '間' : '間隔'}</div>
       <div className="tankGate__column">
         <div className="tankGate__fill" style={fillStyle(progress)} />
       </div>

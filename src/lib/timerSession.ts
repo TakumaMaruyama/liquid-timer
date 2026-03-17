@@ -54,7 +54,7 @@ export interface SessionTransition {
 }
 
 export const DEFAULT_WORKOUT: QuickWorkoutInput = {
-  title: 'Main Set',
+  title: 'メインセット',
   rounds: 4,
   repsPerRound: 6,
   intervalSec: 75,
@@ -68,7 +68,7 @@ const WARNING_THRESHOLD_MS = 5000
 export function normalizeWorkoutInput(input: QuickWorkoutInput): QuickWorkoutInput {
   return {
     ...input,
-    title: input.title.trim() || 'Main Set',
+    title: input.title.trim() || 'メインセット',
     rounds: clampInteger(input.rounds, 1),
     repsPerRound: clampInteger(input.repsPerRound, 1),
     intervalSec: clampInteger(input.intervalSec, 1),
@@ -329,7 +329,7 @@ export function formatSecondsDisplay(remainingMs: number) {
 }
 
 export function formatRoundLabel(currentRound: number, totalRounds: number) {
-  return `Round ${currentRound}/${totalRounds}`
+  return `セット ${currentRound}/${totalRounds}`
 }
 
 export function isRunningPhase(phase: TimerPhase): phase is ActivePhase {

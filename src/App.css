@@ -39,30 +39,19 @@
 }
 
 .setupScreen {
-  width: min(1200px, calc(100% - 2rem));
+  width: min(1180px, calc(100% - 1rem));
   margin: 0 auto;
-  padding: 2rem 0 3rem;
+  padding: 0.75rem 0 1rem;
 }
 
-.setupScreen__layout {
-  display: grid;
-  grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
-  gap: 1.5rem;
-}
-
-.setupCard,
 .glassPanel {
   border: 1px solid rgba(193, 232, 255, 0.18);
-  background: linear-gradient(180deg, rgba(6, 26, 39, 0.78), rgba(3, 13, 22, 0.92));
+  border-radius: 1.9rem;
+  background: linear-gradient(180deg, rgba(6, 26, 39, 0.8), rgba(3, 13, 22, 0.94));
   box-shadow:
     0 1.5rem 4rem rgba(0, 0, 0, 0.28),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(18px);
-}
-
-.setupCard {
-  border-radius: 1.75rem;
-  padding: 1.5rem;
 }
 
 .setupCard__eyebrow,
@@ -70,146 +59,84 @@
 .metric__label,
 .tankRound__label,
 .tankGate__label {
-  font-size: 0.78rem;
-  letter-spacing: 0.16em;
+  font-size: 0.76rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--color-muted);
 }
 
-.setupCard__title,
+.metric__value,
+.laneTank__summary {
+  color: var(--color-text);
+}
+
+.setupPanel {
+  padding: 1rem;
+}
+
+.setupForm {
+  margin: 0;
+}
+
+.setupForm__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(19rem, 0.85fr);
+  gap: 1rem;
+  min-height: calc(100svh - 2.2rem);
+}
+
+.setupForm__main,
+.setupSummary {
+  display: grid;
+  gap: 1rem;
+  border-radius: 1.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03));
+  padding: 1.15rem;
+}
+
+.setupForm__main {
+  align-content: start;
+}
+
+.setupForm__header h2,
+.setupSummary__title,
 .runScreen__title,
-.timerHero__value {
+.laneTank__title {
   margin: 0;
   color: var(--color-text-strong);
 }
 
-.setupCard__title {
-  font-size: clamp(2.2rem, 2.4vw, 3.35rem);
-  line-height: 0.96;
+.setupForm__header h2 {
+  font-size: clamp(1.8rem, 2.8vw, 2.6rem);
+  line-height: 1;
+  margin-top: 0.3rem;
 }
 
-.setupCard__lead,
-.runScreen__lead,
-.metric__value,
-.laneTank__summary,
-.laneTank__legend {
+.setupForm__header p,
+.setupSummary__copy,
+.setupSummary__note {
+  margin: 0;
   color: var(--color-text);
+  line-height: 1.5;
 }
 
-.setupCard__lead,
-.runScreen__lead {
-  margin-top: 1rem;
-  line-height: 1.6;
-  max-width: 44ch;
-}
-
-.setupCard__ribbon {
-  display: inline-flex;
-  margin-top: 1.5rem;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.6rem 0.9rem;
-  border-radius: 999px;
-  background: rgba(92, 211, 255, 0.12);
-  color: var(--color-accent-strong);
-}
-
-.setupCard__ribbonDot {
-  width: 0.72rem;
-  height: 0.72rem;
-  border-radius: 50%;
-  background: var(--color-accent);
-  box-shadow: 0 0 1rem rgba(92, 211, 255, 0.8);
-}
-
-.setupCard__notes {
+.setupForm__stack,
+.setupSummary__metrics {
   display: grid;
   gap: 0.8rem;
-  margin-top: 1.75rem;
-}
-
-.setupNote {
-  padding: 0.95rem 1rem;
-  border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.setupNote strong,
-.controlButton--primary,
-.controlButton--danger {
-  color: var(--color-text-strong);
-}
-
-.glassPanel {
-  border-radius: 2rem;
-  padding: 1.75rem;
-}
-
-.setupPanel__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.setupPanel__header h2,
-.runScreen__title {
-  font-size: clamp(1.7rem, 2vw, 2.5rem);
-  line-height: 1;
-}
-
-.setupPanel__header p {
-  margin: 0.55rem 0 0;
-  max-width: 48ch;
-  color: var(--color-text);
-}
-
-.setupPanel__summary {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.9rem;
-  margin-bottom: 1.5rem;
-}
-
-.metric {
-  padding: 1rem 1.1rem;
-  border-radius: 1.15rem;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.metric__value {
-  display: block;
-  margin-top: 0.35rem;
-  font-size: clamp(1.4rem, 1.8vw, 2rem);
-  font-weight: 700;
-}
-
-.setupForm {
-  display: grid;
-  gap: 1.2rem;
-}
-
-.setupForm__grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
 }
 
 .field {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.45rem;
 }
 
-.field--wide {
-  grid-column: 1 / -1;
-}
-
-.field label {
+.field label,
+.toggleField label {
   color: var(--color-text-strong);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .field__hint {
@@ -219,13 +146,14 @@
 
 .field input {
   width: 100%;
-  box-sizing: border-box;
+  min-height: 4rem;
+  padding: 1rem 1.1rem;
+  border-radius: 1rem;
   border: 1px solid rgba(193, 232, 255, 0.18);
   background: rgba(2, 16, 26, 0.72);
   color: var(--color-text-strong);
-  border-radius: 1rem;
-  padding: 0.95rem 1rem;
   font: inherit;
+  font-size: 1.18rem;
   transition:
     border-color 0.2s ease,
     transform 0.2s ease,
@@ -248,8 +176,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  min-height: 4rem;
   padding: 1rem 1.1rem;
-  border-radius: 1.15rem;
+  border-radius: 1rem;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -258,28 +187,63 @@
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  color: var(--color-text-strong);
-  font-weight: 600;
 }
 
 .toggleField input {
-  width: 1.05rem;
-  height: 1.05rem;
+  width: 1.15rem;
+  height: 1.15rem;
   accent-color: var(--color-accent);
 }
 
-.setupForm__actions,
-.runScreen__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.85rem;
+.setupSummary {
+  align-content: start;
+}
+
+.setupSummary__kicker {
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-accent-strong);
+}
+
+.setupSummary__title {
+  font-size: clamp(1.5rem, 2.2vw, 2rem);
+  line-height: 1.05;
+}
+
+.setupSummary__note {
+  padding: 0.95rem 1rem;
+  border-radius: 1rem;
+  background: rgba(92, 211, 255, 0.08);
+  border: 1px solid rgba(92, 211, 255, 0.12);
+}
+
+.metric {
+  padding: 1rem 1.05rem;
+  border-radius: 1rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.metric__value {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: clamp(1.55rem, 2vw, 2.2rem);
+  font-weight: 700;
+}
+
+.setupForm__actions {
+  display: grid;
+  gap: 0.7rem;
 }
 
 .controlButton {
   appearance: none;
+  min-height: 3.65rem;
   border: 1px solid transparent;
-  border-radius: 999px;
-  padding: 0.9rem 1.3rem;
+  border-radius: 1rem;
+  padding: 0.95rem 1.2rem;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
@@ -300,16 +264,18 @@
 }
 
 .controlButton--primary {
+  color: var(--color-text-strong);
   background: linear-gradient(135deg, var(--color-accent), var(--color-accent-strong));
   box-shadow: 0 1rem 2rem rgba(24, 148, 197, 0.26);
 }
 
 .controlButton--secondary {
-  background: rgba(255, 255, 255, 0.06);
   color: var(--color-text-strong);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .controlButton--danger {
+  color: var(--color-text-strong);
   background: rgba(255, 89, 89, 0.18);
 }
 
@@ -320,16 +286,16 @@
 }
 
 .runScreen {
-  width: min(1400px, calc(100% - 2rem));
+  width: min(1360px, calc(100% - 1rem));
   margin: 0 auto;
-  padding: 1.5rem 0 2rem;
+  padding: 0.75rem 0 1rem;
 }
 
 .runScreen__panel {
   position: relative;
-  min-height: calc(100svh - 3.5rem);
+  min-height: calc(100svh - 1.75rem);
+  padding: 1rem;
   border-radius: 2rem;
-  padding: 1.5rem;
   border: 1px solid rgba(193, 232, 255, 0.18);
   background:
     radial-gradient(circle at 20% 0%, rgba(92, 211, 255, 0.1), transparent 30%),
@@ -339,7 +305,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0.95rem;
   overflow: hidden;
 }
 
@@ -355,112 +321,111 @@
 
 .timerHero,
 .laneTank,
-.setupCard,
 .glassPanel {
   position: relative;
 }
 
-.runScreen__topbar {
+.runScreen__header {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 1rem;
 }
 
-.runScreen__stage {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(22rem, 26rem);
-  gap: 1.2rem;
-  align-items: stretch;
-  flex: 1;
+.runScreen__title {
+  font-size: clamp(1.55rem, 2vw, 2.1rem);
+  line-height: 1;
+  margin-top: 0.28rem;
 }
 
-.timerHero {
-  border-radius: 1.8rem;
-  padding: 1.4rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
-  display: grid;
-  gap: 1.3rem;
-  align-content: center;
-}
-
-.timerHero__meta {
+.runScreen__headerMeta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.8rem;
+  justify-content: flex-end;
+  gap: 0.55rem;
 }
 
+.runScreen__headerMeta span,
 .timerChip {
-  padding: 0.5rem 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.78rem;
   border-radius: 999px;
   background: rgba(92, 211, 255, 0.12);
   color: var(--color-accent-strong);
 }
 
+.runScreen__main {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.95rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.timerHero {
+  display: grid;
+  gap: 0.85rem;
+  align-content: center;
+  min-height: 17rem;
+  padding: 1.2rem 1.35rem;
+  border-radius: 1.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+}
+
+.timerHero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.timerHero__headline {
+  font-size: clamp(1.15rem, 1.7vw, 1.5rem);
+  color: var(--color-muted);
+  letter-spacing: 0.02em;
+}
+
+.timerHero__display {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.85rem;
+}
+
 .timerHero__value {
-  font-size: clamp(6rem, 19vw, 12rem);
-  line-height: 0.88;
-  letter-spacing: -0.06em;
+  margin: 0;
+  color: var(--color-text-strong);
+  font-size: clamp(7rem, 20vw, 12rem);
+  line-height: 0.85;
+  letter-spacing: -0.07em;
   font-weight: 800;
   text-shadow: 0 0 2rem rgba(92, 211, 255, 0.16);
 }
 
-.timerHero__clockline {
-  display: flex;
-  align-items: baseline;
-  gap: 1rem;
-  flex-wrap: wrap;
+.timerHero__unit {
+  padding-bottom: 0.9rem;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  color: var(--color-accent-strong);
+  font-weight: 700;
 }
 
 .timerHero__subvalue {
   font-family: var(--font-mono);
-  color: var(--color-accent-strong);
-  font-size: clamp(1rem, 2vw, 1.35rem);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.timerHero__phase {
-  margin: 0;
-  font-size: clamp(1.6rem, 2.8vw, 2.7rem);
-  color: var(--color-text-strong);
-}
-
-.timerHero__copy {
-  margin: 0;
-  max-width: 34ch;
   color: var(--color-text);
-  font-size: 1.05rem;
-}
-
-.timerHero__stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.85rem;
-}
-
-.runStat {
-  padding: 1rem;
-  border-radius: 1.25rem;
-  background: rgba(0, 0, 0, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.runStat strong {
-  display: block;
-  margin-top: 0.32rem;
-  color: var(--color-text-strong);
-  font-size: 1.35rem;
+  font-size: clamp(1rem, 1.6vw, 1.2rem);
+  letter-spacing: 0.06em;
 }
 
 .laneTank {
-  border-radius: 1.8rem;
-  padding: 1.4rem;
+  display: grid;
+  gap: 0.85rem;
+  min-height: 0;
+  padding: 1rem;
+  border-radius: 1.65rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: linear-gradient(180deg, rgba(7, 20, 31, 0.9), rgba(3, 9, 17, 0.96));
-  display: grid;
-  gap: 1.2rem;
 }
 
 .laneTank__header {
@@ -471,35 +436,39 @@
 }
 
 .laneTank__title {
-  margin: 0;
-  font-size: 1.35rem;
-  color: var(--color-text-strong);
+  font-size: 1.2rem;
 }
 
 .laneTank__track {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
-  gap: 0.75rem;
-  align-items: center;
+  display: flex;
+  gap: 0.45rem;
+  align-items: stretch;
+  min-width: 0;
 }
 
 .tankRound {
   display: grid;
-  gap: 0.55rem;
+  gap: 0.42rem;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.tankRound__label {
+  text-align: center;
 }
 
 .tankRound__cells {
   display: grid;
-  grid-template-columns: repeat(var(--rep-count), minmax(2.2rem, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: repeat(var(--rep-count), minmax(0, 1fr));
+  gap: 0.35rem;
 }
 
 .tankCell {
   position: relative;
   isolation: isolate;
-  min-height: 9rem;
-  border-radius: 1.25rem;
+  min-width: 0;
+  min-height: 8rem;
+  border-radius: 1rem;
   border: 1px solid rgba(167, 229, 255, 0.16);
   background: linear-gradient(180deg, rgba(11, 31, 44, 0.94), rgba(4, 12, 22, 0.98));
   overflow: hidden;
@@ -549,23 +518,26 @@
 
 .tankCell__index {
   position: absolute;
-  top: 0.6rem;
-  left: 0.65rem;
+  top: 0.52rem;
+  left: 0.54rem;
   z-index: 2;
   font-family: var(--font-mono);
+  font-size: 0.72rem;
   color: rgba(231, 246, 255, 0.72);
 }
 
 .tankCell__badge {
   position: absolute;
-  right: 0.6rem;
-  bottom: 0.65rem;
+  right: 0.5rem;
+  bottom: 0.55rem;
   z-index: 2;
-  padding: 0.28rem 0.5rem;
+  min-width: 1.8rem;
+  padding: 0.22rem 0.42rem;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.22);
-  color: rgba(231, 246, 255, 0.8);
-  font-size: 0.72rem;
+  background: rgba(0, 0, 0, 0.24);
+  color: rgba(231, 246, 255, 0.84);
+  font-size: 0.66rem;
+  text-align: center;
 }
 
 .tankCell--done .tankCell__liquid {
@@ -590,19 +562,19 @@
 
 .tankCell--queued .tankCell__badge {
   background: rgba(92, 211, 255, 0.08);
-  color: rgba(231, 246, 255, 0.62);
+  color: rgba(231, 246, 255, 0.64);
 }
 
 .tankGate {
   display: grid;
-  gap: 0.55rem;
-  align-items: center;
+  gap: 0.38rem;
   justify-items: center;
+  flex: 0 0 1.65rem;
 }
 
 .tankGate__column {
-  width: 1rem;
-  min-height: 9rem;
+  width: 0.9rem;
+  min-height: 8rem;
   display: flex;
   align-items: flex-end;
   border-radius: 999px;
@@ -625,8 +597,9 @@
 .laneTank__legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  font-size: 0.92rem;
+  gap: 0.9rem;
+  color: var(--color-text);
+  font-size: 0.88rem;
 }
 
 .laneTank__legend span {
@@ -654,8 +627,57 @@
   background: rgba(255, 165, 76, 0.96);
 }
 
+.laneTank--compact .laneTank__track {
+  gap: 0.3rem;
+}
+
+.laneTank--compact .tankRound__cells {
+  gap: 0.2rem;
+}
+
+.laneTank--compact .tankRound__label,
+.laneTank--compact .tankGate__label {
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+}
+
+.laneTank--compact .tankCell {
+  min-height: 6.3rem;
+  border-radius: 0.85rem;
+}
+
+.laneTank--compact .tankCell__index {
+  top: 0.38rem;
+  left: 0.4rem;
+  font-size: 0.62rem;
+}
+
+.laneTank--compact .tankCell__badge {
+  right: 0.34rem;
+  bottom: 0.36rem;
+  min-width: 1.1rem;
+  padding: 0.16rem 0.24rem;
+  font-size: 0.54rem;
+}
+
+.laneTank--compact .tankGate {
+  flex-basis: 1.2rem;
+}
+
+.laneTank--compact .tankGate__column {
+  width: 0.68rem;
+  min-height: 6.3rem;
+}
+
+.laneTank--compact .laneTank__legend {
+  gap: 0.7rem;
+  font-size: 0.76rem;
+}
+
 .runScreen__actions {
-  justify-content: flex-end;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.75rem;
 }
 
 .runScreen__panel[data-cue='five_second_warning'] .timerHero,
@@ -705,62 +727,97 @@
   }
 }
 
-@media (max-width: 1060px) {
-  .setupScreen__layout,
-  .runScreen__stage {
+@media (max-width: 1100px) {
+  .setupForm__layout {
+    grid-template-columns: minmax(0, 1fr) minmax(17rem, 0.8fr);
+  }
+
+  .runScreen__panel {
+    padding: 0.9rem;
+  }
+
+  .timerHero__value {
+    font-size: clamp(6.3rem, 17vw, 10.2rem);
+  }
+}
+
+@media (max-width: 900px) {
+  .setupForm__layout {
     grid-template-columns: 1fr;
   }
 
-  .setupPanel__summary,
-  .timerHero__stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .runScreen__header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .runScreen__headerMeta {
+    justify-content: flex-start;
   }
 
   .runScreen__actions {
-    justify-content: flex-start;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 760px) {
   .setupScreen,
   .runScreen {
-    width: min(100%, calc(100% - 1rem));
-    padding-top: 0.5rem;
-    padding-bottom: 1rem;
+    width: min(100%, calc(100% - 0.75rem));
+    padding-top: 0.4rem;
+    padding-bottom: 0.6rem;
   }
 
-  .setupCard,
   .glassPanel,
   .runScreen__panel,
   .timerHero,
-  .laneTank {
-    border-radius: 1.45rem;
+  .laneTank,
+  .setupForm__main,
+  .setupSummary {
+    border-radius: 1.3rem;
   }
 
-  .setupCard,
-  .glassPanel,
-  .runScreen__panel,
-  .timerHero,
-  .laneTank {
-    padding: 1.1rem;
+  .setupPanel,
+  .runScreen__panel {
+    padding: 0.8rem;
   }
 
-  .setupForm__grid,
-  .setupPanel__summary,
-  .timerHero__stats {
-    grid-template-columns: 1fr;
+  .setupForm__main,
+  .setupSummary,
+  .laneTank,
+  .timerHero {
+    padding: 0.95rem;
   }
 
-  .tankRound__cells {
-    grid-template-columns: repeat(var(--rep-count), minmax(2rem, 1fr));
+  .field input,
+  .toggleField,
+  .controlButton {
+    min-height: 3.35rem;
   }
 
-  .tankCell,
-  .tankGate__column {
-    min-height: 7rem;
+  .toggleField {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .timerHero__display {
+    gap: 0.55rem;
   }
 
   .timerHero__value {
-    font-size: clamp(4.4rem, 28vw, 7.2rem);
+    font-size: clamp(5rem, 22vw, 7.5rem);
+  }
+
+  .timerHero__unit {
+    padding-bottom: 0.55rem;
+    font-size: clamp(1.5rem, 6vw, 2.2rem);
+  }
+
+  .runScreen__actions {
+    grid-template-columns: 1fr;
+  }
+
+  .laneTank__legend {
+    gap: 0.6rem;
   }
 }
