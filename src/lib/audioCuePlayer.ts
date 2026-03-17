@@ -16,23 +16,28 @@ interface ToneStep {
   waveform: OscillatorType
 }
 
+const warningPitch = {
+  frequency: 1760,
+  overtone: 880,
+}
+
 const cueMap: Record<CueEvent, ToneStep[]> = {
   five_second_warning: [
     {
       delay: 0,
       duration: 0.09,
-      frequency: 1760,
+      frequency: warningPitch.frequency,
       gain: 0.085,
-      overtone: 880,
+      overtone: warningPitch.overtone,
       overtoneGain: 0.03,
       waveform: 'square',
     },
     {
       delay: 0.16,
       duration: 0.09,
-      frequency: 1760,
+      frequency: warningPitch.frequency,
       gain: 0.085,
-      overtone: 880,
+      overtone: warningPitch.overtone,
       overtoneGain: 0.03,
       waveform: 'square',
     },
@@ -78,9 +83,9 @@ const countdownCueMap: Record<1 | 2 | 3, ToneStep[]> = {
     {
       delay: 0,
       duration: 0.08,
-      frequency: 1360,
+      frequency: warningPitch.frequency,
       gain: 0.07,
-      overtone: 680,
+      overtone: warningPitch.overtone,
       overtoneGain: 0.024,
       waveform: 'square',
     },
@@ -89,9 +94,9 @@ const countdownCueMap: Record<1 | 2 | 3, ToneStep[]> = {
     {
       delay: 0,
       duration: 0.08,
-      frequency: 1520,
+      frequency: warningPitch.frequency,
       gain: 0.074,
-      overtone: 760,
+      overtone: warningPitch.overtone,
       overtoneGain: 0.026,
       waveform: 'square',
     },
@@ -100,9 +105,9 @@ const countdownCueMap: Record<1 | 2 | 3, ToneStep[]> = {
     {
       delay: 0,
       duration: 0.09,
-      frequency: 1720,
+      frequency: warningPitch.frequency,
       gain: 0.082,
-      overtone: 860,
+      overtone: warningPitch.overtone,
       overtoneGain: 0.03,
       waveform: 'square',
     },
