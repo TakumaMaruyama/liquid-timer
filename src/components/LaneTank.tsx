@@ -6,6 +6,7 @@ import {
   type QuickWorkoutInput,
   type WorkoutSession,
 } from '../lib/timerSession'
+import { getRoundGateState } from '../lib/laneTankState'
 import { getTankBadgeLabel, type TankBadgeKind } from '../lib/uiLabels'
 
 interface LaneTankProps {
@@ -114,18 +115,7 @@ export function LaneTank({ session, workout }: LaneTankProps) {
               {roundNumber < workout.rounds && (
                 <RoundGate
                   compact={compact}
-                  active={
-                    effectivePhase === 'round_rest' &&
-                    session.currentRound === roundNumber + 1
-                  }
-                  complete={session.currentRound > roundNumber + 1 || session.phase === 'complete'}
-                  progress={
-                    effectivePhase === 'round_rest' && session.currentRound === roundNumber + 1
-                      ? activeProgress
-                      : session.currentRound > roundNumber + 1 || session.phase === 'complete'
-                        ? 1
-                        : 0
-                  }
+                  {...getRoundGateState(session, roundNumber, effectivePhase, activeProgress)}
                 />
               )}
             </Fragment>

@@ -42,11 +42,15 @@ function getPrimaryActionTone(phase: ReturnType<typeof getEffectivePhase>) {
 
 function loadDisplayMode(): TimerDisplayMode {
   if (typeof window === 'undefined') {
-    return 'seconds'
+    return 'minutes_seconds'
   }
 
   const stored = window.localStorage.getItem(DISPLAY_MODE_STORAGE_KEY)
-  return stored === 'minutes_seconds' ? 'minutes_seconds' : 'seconds'
+  if (stored === 'seconds' || stored === 'minutes_seconds') {
+    return stored
+  }
+
+  return 'minutes_seconds'
 }
 
 function formatMainDisplay(remainingMs: number, displayMode: TimerDisplayMode) {
@@ -56,7 +60,7 @@ function formatMainDisplay(remainingMs: number, displayMode: TimerDisplayMode) {
 }
 
 function getDisplayModeLabel(displayMode: TimerDisplayMode) {
-  return displayMode === 'minutes_seconds' ? '表示: 分:秒' : '表示: 秒'
+  return displayMode === 'minutes_seconds' ? '表示切替　分:秒' : '表示切替　秒'
 }
 
 export function RunScreen({ workout, onEdit }: RunScreenProps) {
