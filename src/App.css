@@ -209,8 +209,7 @@
 
 .setupForm__header h2,
 .setupSummary__title,
-.runScreen__title,
-.laneTank__title {
+.runScreen__title {
   margin: 0;
   color: var(--color-text-strong);
 }
@@ -491,7 +490,7 @@
 
 .runScreen__main {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 1rem;
   flex: 1;
   min-height: 0;
@@ -499,7 +498,7 @@
 
 .timerHero {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 1rem;
   justify-items: center;
   min-height: clamp(22rem, 54svh, 34rem);
@@ -604,41 +603,6 @@
   white-space: nowrap;
 }
 
-.timerHero__chips {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.8rem;
-  width: 100%;
-}
-
-.timerHero__chip {
-  display: grid;
-  gap: 0.32rem;
-  min-height: 5.35rem;
-  padding: 0.9rem 1rem;
-  border-radius: 1.15rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
-}
-
-.timerHero__chipLabel {
-  font-size: 0.76rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-}
-
-.timerHero__chipValue {
-  font-family: var(--font-mono);
-  color: var(--color-text-strong);
-  font-size: clamp(1.14rem, 1.7vw, 1.55rem);
-  line-height: 1.12;
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-}
-
 .laneTank {
   display: grid;
   gap: 0.72rem;
@@ -656,19 +620,16 @@
   gap: 1rem;
 }
 
-.laneTank__title {
-  font-size: 1.05rem;
-  color: var(--color-text);
+.laneTank__eyebrow {
+  color: rgba(231, 246, 255, 0.86);
+  font-size: 0.86rem;
+  letter-spacing: 0.12em;
 }
 
 .laneTank__summary {
   font-family: var(--font-mono);
   font-size: 0.9rem;
   color: var(--color-muted);
-}
-
-.laneTank .setupCard__eyebrow {
-  color: rgba(177, 208, 224, 0.64);
 }
 
 .laneTank__track {
@@ -1108,20 +1069,6 @@
   .timerHero__unit {
     padding-bottom: 0.5rem;
     font-size: clamp(1.7rem, 5vw, 2.35rem);
-  }
-
-  .timerHero__chips {
-    grid-template-columns: 1fr;
-    gap: 0.65rem;
-  }
-
-  .timerHero__chip {
-    min-height: 0;
-    padding: 0.8rem 0.9rem;
-  }
-
-  .timerHero__chipValue {
-    font-size: clamp(1.05rem, 4vw, 1.25rem);
   }
 
   .runScreen__actions {

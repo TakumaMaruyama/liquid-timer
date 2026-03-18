@@ -84,21 +84,7 @@ export function RunScreen({ workout, onEdit }: RunScreenProps) {
 
   const effectivePhase = getEffectivePhase(session)
   const displayPhase = session.phase === 'paused' ? 'paused' : effectivePhase
-  const totalReps = workout.rounds * workout.repsPerRound
   const mainDisplay = formatMainDisplay(session.remainingMs, displayMode)
-  const secondaryTimeLabel =
-    displayMode === 'minutes_seconds' ? '秒換算' : '分:秒'
-  const secondaryTimeValue =
-    displayMode === 'minutes_seconds'
-      ? `${formatSecondsDisplay(session.remainingMs)}秒`
-      : formatDurationLabel(session.remainingMs / 1000)
-  const absoluteRep =
-    session.phase === 'idle'
-      ? 1
-      : Math.min(
-          totalReps,
-          (session.currentRound - 1) * workout.repsPerRound + session.currentRep,
-        )
 
   const primaryAction =
     session.phase === 'paused'
@@ -161,20 +147,9 @@ export function RunScreen({ workout, onEdit }: RunScreenProps) {
                 {displayMode === 'seconds' && <div className="timerHero__unit">秒</div>}
               </div>
             </div>
-
-            <div className="timerHero__chips">
-              <div className="timerHero__chip">
-                <div className="timerHero__chipLabel">{secondaryTimeLabel}</div>
-                <div className="timerHero__chipValue">{secondaryTimeValue}</div>
-              </div>
-              <div className="timerHero__chip">
-                <div className="timerHero__chipLabel">進行</div>
-                <div className="timerHero__chipValue">
-                  {absoluteRep}/{totalReps}
-                </div>
-              </div>
-            </div>
           </section>
+
+          <LaneTank session={session} workout={workout} />
 
           <div className="runScreen__actions">
             <button
@@ -195,8 +170,6 @@ export function RunScreen({ workout, onEdit }: RunScreenProps) {
               設定に戻る
             </button>
           </div>
-
-          <LaneTank session={session} workout={workout} />
         </div>
       </div>
     </section>

@@ -34,10 +34,7 @@ export function LaneTank({ session, workout }: LaneTankProps) {
   return (
     <section className={`laneTank${compact ? ' laneTank--compact' : ''}`}>
       <div className="laneTank__header">
-        <div>
-          <div className="setupCard__eyebrow">進行タンク</div>
-          <h2 className="laneTank__title">セットごとの液体表示</h2>
-        </div>
+        <div className="setupCard__eyebrow laneTank__eyebrow">進行タンク</div>
         <div className="laneTank__summary">
           {workout.rounds}セット / {workout.repsPerRound}本
         </div>
