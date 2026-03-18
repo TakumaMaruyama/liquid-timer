@@ -60,7 +60,13 @@ function formatMainDisplay(remainingMs: number, displayMode: TimerDisplayMode) {
 }
 
 function getDisplayModeLabel(displayMode: TimerDisplayMode) {
-  return displayMode === 'minutes_seconds' ? '表示切替　分:秒' : '表示切替　秒'
+  return displayMode === 'minutes_seconds' ? '表示　分:秒' : '表示　秒'
+}
+
+function getDisplayModeAriaLabel(displayMode: TimerDisplayMode) {
+  return displayMode === 'minutes_seconds'
+    ? '時間表示を秒に切り替え'
+    : '時間表示を分秒に切り替え'
 }
 
 export function RunScreen({ workout, onEdit }: RunScreenProps) {
@@ -81,9 +87,11 @@ export function RunScreen({ workout, onEdit }: RunScreenProps) {
   const totalReps = workout.rounds * workout.repsPerRound
   const mainDisplay = formatMainDisplay(session.remainingMs, displayMode)
   const secondaryTimeLabel =
+    displayMode === 'minutes_seconds' ? '秒換算' : '分:秒'
+  const secondaryTimeValue =
     displayMode === 'minutes_seconds'
-      ? `残り ${formatSecondsDisplay(session.remainingMs)}秒`
-      : `あと ${formatDurationLabel(session.remainingMs / 1000)}`
+      ? `${formatSecondsDisplay(session.remainingMs)}秒`
+      : formatDurationLabel(session.remainingMs / 1000)
   const absoluteRep =
     session.phase === 'idle'
       ? 1
@@ -115,7 +123,7 @@ export function RunScreen({ workout, onEdit }: RunScreenProps) {
         data-warning={isWarningWindow}
       >
         <header className="runScreen__header">
-          <div>
+          <div className="runScreen__headerInfo">
             <div className="runScreen__eyebrow">プールサイドタイマー</div>
             <h1 className="runScreen__title">{workout.title}</h1>
           </div>
@@ -123,6 +131,7 @@ export function RunScreen({ workout, onEdit }: RunScreenProps) {
             <button
               className="runScreen__headerToggle"
               type="button"
+              aria-label={getDisplayModeAriaLabel(displayMode)}
               onClick={() =>
                 setDisplayMode((current) =>
                   current === 'seconds' ? 'minutes_seconds' : 'seconds',
@@ -136,43 +145,58 @@ export function RunScreen({ workout, onEdit }: RunScreenProps) {
 
         <div className="runScreen__main">
           <section className="timerHero">
-            <div className="timerHero__headline">
-              {getJapanesePhaseHeadline(displayPhase)}
+            <div className="timerHero__statusRow">
+              <div className="timerHero__phaseBadge">{getJapanesePhaseHeadline(displayPhase)}</div>
             </div>
 
-            <div className="timerHero__display" aria-live="polite">
-              <div
-                className={`timerHero__value${
-                  displayMode === 'minutes_seconds' ? ' timerHero__value--clock' : ''
-                }`}
-              >
-                {mainDisplay}
+            <div className="timerHero__displayFrame">
+              <div className="timerHero__display" aria-live="polite" aria-atomic="true">
+                <div
+                  className={`timerHero__value${
+                    displayMode === 'minutes_seconds' ? ' timerHero__value--clock' : ''
+                  }`}
+                >
+                  {mainDisplay}
+                </div>
+                {displayMode === 'seconds' && <div className="timerHero__unit">秒</div>}
               </div>
-              {displayMode === 'seconds' && <div className="timerHero__unit">秒</div>}
             </div>
 
-            <div className="timerHero__subvalue">
-              {secondaryTimeLabel} ・ 進行 {absoluteRep}/{totalReps}
+            <div className="timerHero__chips">
+              <div className="timerHero__chip">
+                <div className="timerHero__chipLabel">{secondaryTimeLabel}</div>
+                <div className="timerHero__chipValue">{secondaryTimeValue}</div>
+              </div>
+              <div className="timerHero__chip">
+                <div className="timerHero__chipLabel">進行</div>
+                <div className="timerHero__chipValue">
+                  {absoluteRep}/{totalReps}
+                </div>
+              </div>
             </div>
           </section>
 
-          <LaneTank session={session} workout={workout} />
-        </div>
+          <div className="runScreen__actions">
+            <button
+              className={`controlButton ${getPrimaryActionTone(displayPhase)}`}
+              type="button"
+              onClick={primaryAction}
+            >
+              {getPrimaryActionLabel(displayPhase)}
+            </button>
+            <button className="controlButton controlButton--danger" type="button" onClick={reset}>
+              リセット
+            </button>
+            <button
+              className="controlButton controlButton--secondary"
+              type="button"
+              onClick={onEdit}
+            >
+              設定に戻る
+            </button>
+          </div>
 
-        <div className="runScreen__actions">
-          <button
-            className={`controlButton ${getPrimaryActionTone(displayPhase)}`}
-            type="button"
-            onClick={primaryAction}
-          >
-            {getPrimaryActionLabel(displayPhase)}
-          </button>
-          <button className="controlButton controlButton--danger" type="button" onClick={reset}>
-            リセット
-          </button>
-          <button className="controlButton controlButton--secondary" type="button" onClick={onEdit}>
-            設定に戻る
-          </button>
+          <LaneTank session={session} workout={workout} />
         </div>
       </div>
     </section>
