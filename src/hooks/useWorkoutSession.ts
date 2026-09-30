@@ -1,12 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  createAudioCuePlayer,
-  type AudioCuePlayer,
-} from '../lib/audioCuePlayer'
+import { createAudioCuePlayer, type AudioCuePlayer } from '../lib/audioCuePlayer'
 import {
   createIdleSession,
-  getCountdownCueSeconds,
-  isFinalIntervalStep,
   isRunningPhase,
   pauseSession,
   resetSession,
@@ -18,181 +13,258 @@ import {
   type WorkoutSession,
 } from '../lib/timerSession'
 
-interface VisualCueState {
-  id: number
-  event: CueEvent | null
-}
-
-export function useWorkoutSession(workout: QuickWorkoutInput) {
-  const [session, setSession] = useState<WorkoutSession>(() => createIdleSession(workout))
-  const [visualCue, setVisualCue] = useState<VisualCueState>({ id: 0, event: null })
-  const audioPlayerRef = useRef<AudioCuePlayer | null>(null)
-  const cueTimeoutRef = useRef<number | null>(null)
+export function useWorkoutSession(initialWorkout: QuickWorkoutInput) {
+  const [session, setSession] = useState<WorkoutSession>(() => createIdleSession(initialWorkout))
+  const [visualCue, setVisualCue] = useState<CueEvent | null>(null)
+  const [operationLocked, setOperationLocked] = useState(false)
+  const [startError, setStartError] = useState<string | null>(null)
   const sessionRef = useRef(session)
-  const countdownTrackerRef = useRef<{ cursor: number; remainingMs: number }>({
-    cursor: -1,
-    remainingMs: 0,
-  })
-
+  const workoutRef = useRef(initialWorkout)
+  const lockedRef = useRef(false)
+  const generationRef = useRef(0)
+  const audioReadyRef = useRef(false)
+  const audioPendingRef = useRef(false)
+  const firstCueScheduledRef = useRef(false)
+  const cleanupReleaseRef = useRef<(() => void) | null>(null)
+  const audioPlayerRef = useRef<AudioCuePlayer | null>(null)
   if (audioPlayerRef.current === null) {
     audioPlayerRef.current = createAudioCuePlayer()
   }
 
-  const countdownVariant = isFinalIntervalStep(session) ? 'finish' : 'start'
+  const setLocked = useCallback((value: boolean) => {
+    lockedRef.current = value
+    setOperationLocked(value)
+  }, [])
 
-  useEffect(() => {
-    sessionRef.current = session
-  }, [session])
+  const updateSession = useCallback((next: WorkoutSession) => {
+    sessionRef.current = next
+    setSession(next)
+  }, [])
 
-  useEffect(() => {
-    if (session.phase === 'idle' || session.phase === 'complete') {
-      countdownTrackerRef.current = {
-        cursor: -1,
-        remainingMs: 0,
-      }
-    }
-  }, [session.phase])
+  const clearRelease = useCallback(() => {
+    cleanupReleaseRef.current?.()
+    cleanupReleaseRef.current = null
+  }, [])
 
-  useEffect(() => {
-    return () => {
-      if (cueTimeoutRef.current !== null) {
-        window.clearTimeout(cueTimeoutRef.current)
-      }
+  const cancelAudio = useCallback(() => {
+    generationRef.current += 1
+    audioPendingRef.current = false
+    clearRelease()
+    audioPlayerRef.current?.cancelScheduled()
+  }, [clearRelease])
+
+  const abortStart = useCallback((message: string) => {
+    cancelAudio()
+    updateSession(resetSession(workoutRef.current))
+    setLocked(false)
+    setVisualCue(null)
+    setStartError(message)
+  }, [cancelAudio, setLocked, updateSession])
+
+  const emitCues = useCallback((events: CueEvent[], late = false) => {
+    if (events.length === 0) return
+    setVisualCue(events[events.length - 1])
+    for (const event of events) {
+      if (late) continue
+      if (event === 'five_second_warning') continue
+      if (event === 'phase_switch' && firstCueScheduledRef.current) continue
+      void audioPlayerRef.current?.play(event, workoutRef.current.audioEnabled).catch(() => {})
     }
   }, [])
 
-  const emitCues = useCallback((events: CueEvent[]) => {
-    if (events.length === 0) {
+  const prepareAudio = useCallback((firstCueAt: number, token: number) => {
+    const attempt = async () => {
+      let ready = false
+      try {
+        ready = (await audioPlayerRef.current?.unlock()) ?? false
+      } catch {
+        ready = false
+      }
+      if (token !== generationRef.current || audioReadyRef.current) return
+      if (!ready) return false
+      audioReadyRef.current = true
+      audioPendingRef.current = false
+      clearRelease()
+      if (firstCueAt > 0) {
+        if (!audioPlayerRef.current?.scheduleAt('phase_switch', true, firstCueAt)) {
+          abortStart('音声の準備が開始時刻に間に合いませんでした。もう一度スタートしてください。')
+          return
+        }
+        firstCueScheduledRef.current = true
+        const leadInSeconds = workoutRef.current.leadInSec
+        for (let second = Math.min(3, leadInSeconds); second >= 1; second -= 1) {
+          const cueAt = firstCueAt - second * 1000
+          if (cueAt - performance.now() >= 25) {
+            audioPlayerRef.current?.scheduleCountdownAt(second, true, cueAt)
+          }
+        }
+      }
+    }
+    return attempt()
+  }, [abortStart, clearRelease])
+
+  const attachRelease = useCallback((pointerId: number, firstCueAt: number, token: number) => {
+    const onUp = (event: PointerEvent) => {
+      if (event.pointerId !== pointerId) return
+      clearRelease()
+      if (token !== generationRef.current || audioReadyRef.current) return
+      void prepareAudio(firstCueAt, token).then((ready) => {
+        if (ready === false && token === generationRef.current && !audioReadyRef.current) {
+          abortStart('音声を有効にできませんでした。端末の音声設定を確認してください。')
+        }
+      })
+    }
+    const onCancel = (event: PointerEvent) => {
+      if (event.pointerId !== pointerId) return
+      clearRelease()
+      if (token === generationRef.current && !audioReadyRef.current) {
+        abortStart('音声を有効にできませんでした。もう一度スタートしてください。')
+      }
+    }
+    window.addEventListener('pointerup', onUp, true)
+    window.addEventListener('pointercancel', onCancel, true)
+    cleanupReleaseRef.current = () => {
+      window.removeEventListener('pointerup', onUp, true)
+      window.removeEventListener('pointercancel', onCancel, true)
+    }
+  }, [abortStart, clearRelease, prepareAudio])
+
+  const start = useCallback((workout: QuickWorkoutInput, pressedAt: number, pointerId?: number) => {
+    const currentPhase = sessionRef.current.phase
+    if (currentPhase !== 'idle' && !(currentPhase === 'complete' && !lockedRef.current)) return false
+    cancelAudio()
+    const token = generationRef.current
+    workoutRef.current = workout
+    audioReadyRef.current = !workout.audioEnabled
+    audioPendingRef.current = workout.audioEnabled
+    firstCueScheduledRef.current = false
+    setStartError(null)
+    setVisualCue(null)
+    updateSession(startSession(workout, pressedAt))
+    setLocked(true)
+
+    if (workout.audioEnabled) {
+      const firstCueAt = workout.leadInSec > 0 ? pressedAt + workout.leadInSec * 1000 : 0
+      if (pointerId !== undefined) attachRelease(pointerId, firstCueAt, token)
+      void prepareAudio(firstCueAt, token).then((ready) => {
+        if (ready === false && pointerId === undefined && token === generationRef.current) {
+          abortStart('音声を有効にできませんでした。端末の音声設定を確認してください。')
+        }
+      })
+    }
+    return true
+  }, [abortStart, attachRelease, cancelAudio, prepareAudio, setLocked, updateSession])
+
+  const advance = useCallback(() => {
+    const current = sessionRef.current
+    if (!isRunningPhase(current.phase)) return
+    const now = performance.now()
+    if (audioPendingRef.current && current.phase === 'lead_in' && current.phaseEndsAt !== null && now >= current.phaseEndsAt) {
+      abortStart('音声の準備が開始時刻に間に合いませんでした。もう一度スタートしてください。')
       return
     }
-
-    const latestEvent = events[events.length - 1]
-    setVisualCue((current) => ({
-      id: current.id + 1,
-      event: latestEvent,
-    }))
-
-    if (cueTimeoutRef.current !== null) {
-      window.clearTimeout(cueTimeoutRef.current)
+    if (audioPendingRef.current && current.phase === 'interval' && current.phaseEndsAt !== null && now >= current.phaseEndsAt) {
+      abortStart('音声を有効にできませんでした。もう一度スタートしてください。')
+      return
     }
-
-    cueTimeoutRef.current = window.setTimeout(() => {
-      setVisualCue((current) => ({
-        id: current.id,
-        event: null,
-      }))
-    }, latestEvent === 'workout_complete' ? 1200 : 360)
-
-    for (const event of events) {
-      void audioPlayerRef.current?.play(event, workout.audioEnabled)
-    }
-  }, [workout.audioEnabled])
-
-  const commitTransition = useCallback((nextSession: WorkoutSession, events: CueEvent[]) => {
-    sessionRef.current = nextSession
-    setSession(nextSession)
-    emitCues(events)
-  }, [emitCues])
+    const transition = tickSession(current, now)
+    updateSession(transition.state)
+    const late = current.phaseEndsAt !== null && now - current.phaseEndsAt > 500
+    emitCues(transition.events, late)
+  }, [abortStart, emitCues, updateSession])
 
   useEffect(() => {
-    if (!isRunningPhase(session.phase)) {
-      return
-    }
-
-    let frameId = 0
-
+    if (!isRunningPhase(session.phase)) return
+    let frame = 0
     const loop = () => {
-      const transition = tickSession(sessionRef.current, Date.now())
-      commitTransition(transition.state, transition.events)
-      frameId = window.requestAnimationFrame(loop)
+      advance()
+      frame = window.requestAnimationFrame(loop)
     }
-
-    frameId = window.requestAnimationFrame(loop)
-
+    frame = window.requestAnimationFrame(loop)
+    const onVisibility = () => {
+      if (document.hidden) {
+        audioPlayerRef.current?.cancelScheduled()
+        if (sessionRef.current.phase === 'lead_in' && workoutRef.current.audioEnabled) {
+          cancelAudio()
+          audioReadyRef.current = false
+          audioPendingRef.current = true
+          firstCueScheduledRef.current = false
+        }
+        return
+      }
+      const current = sessionRef.current
+      if (current.phase === 'lead_in' && audioPendingRef.current && current.phaseEndsAt !== null && performance.now() < current.phaseEndsAt) {
+        const token = generationRef.current
+        void prepareAudio(current.phaseEndsAt, token).then((ready) => {
+          if (ready === false && token === generationRef.current) {
+            abortStart('音声を有効にできませんでした。端末の音声設定を確認してください。')
+          }
+        })
+      }
+      advance()
+    }
+    document.addEventListener('visibilitychange', onVisibility)
     return () => {
-      window.cancelAnimationFrame(frameId)
+      window.cancelAnimationFrame(frame)
+      document.removeEventListener('visibilitychange', onVisibility)
     }
-  }, [commitTransition, session.phase])
+  }, [abortStart, advance, cancelAudio, prepareAudio, session.phase])
 
-  useEffect(() => {
-    if (!isRunningPhase(session.phase)) {
-      return
-    }
-
-    const currentSecond = Math.ceil(session.remainingMs / 1000)
-    const tracker = countdownTrackerRef.current
-    if (tracker.cursor !== session.cursor) {
-      countdownTrackerRef.current = {
-        cursor: session.cursor,
-        remainingMs: session.remainingMs,
-      }
-
-      if (currentSecond >= 1 && currentSecond <= 3) {
-        void audioPlayerRef.current?.playCountdownTick(
-          currentSecond,
-          workout.audioEnabled,
-          countdownVariant,
-        )
-      }
-
-      return
-    }
-
-    const crossedSeconds = getCountdownCueSeconds(tracker.remainingMs, session.remainingMs)
-    countdownTrackerRef.current = {
-      cursor: session.cursor,
-      remainingMs: session.remainingMs,
-    }
-
-    for (const second of crossedSeconds) {
-      void audioPlayerRef.current?.playCountdownTick(
-        second,
-        workout.audioEnabled,
-        countdownVariant,
-      )
-    }
-  }, [
-    countdownVariant,
-    session.cursor,
-    session.phase,
-    session.remainingMs,
-    session.timeline.length,
-    workout.audioEnabled,
-  ])
-
-  const start = async () => {
-    await audioPlayerRef.current?.unlock()
-    const nextSession = startSession(workout, Date.now())
-    commitTransition(nextSession, [])
-  }
+  useEffect(() => () => {
+    generationRef.current += 1
+    clearRelease()
+    audioPlayerRef.current?.cancelScheduled()
+  }, [clearRelease])
 
   const pause = () => {
-    const transition = pauseSession(sessionRef.current, Date.now())
-    commitTransition(transition.state, transition.events)
+    if (lockedRef.current || !isRunningPhase(sessionRef.current.phase)) return false
+    cancelAudio()
+    const transition = pauseSession(sessionRef.current, performance.now())
+    updateSession(transition.state)
+    emitCues(transition.events)
+    return true
   }
 
-  const resume = async () => {
-    await audioPlayerRef.current?.unlock()
-    const transition = resumeSession(sessionRef.current, Date.now())
-    commitTransition(transition.state, transition.events)
+  const resume = () => {
+    if (lockedRef.current || sessionRef.current.phase !== 'paused') return false
+    const transition = resumeSession(sessionRef.current, performance.now())
+    if (!isRunningPhase(transition.state.phase)) return false
+    updateSession(transition.state)
+    setLocked(true)
+    const workout = workoutRef.current
+    audioReadyRef.current = !workout.audioEnabled
+    audioPendingRef.current = workout.audioEnabled
+    firstCueScheduledRef.current = false
+    if (workout.audioEnabled) {
+      const token = generationRef.current
+      const firstCueAt = transition.state.phase === 'lead_in' ? transition.state.phaseEndsAt ?? 0 : 0
+      void prepareAudio(firstCueAt, token).then((ready) => {
+        if (ready === false && token === generationRef.current) {
+          abortStart('音声を有効にできませんでした。端末の音声設定を確認してください。')
+        }
+      })
+    }
+    return true
   }
 
   const reset = () => {
-    const nextSession = resetSession(workout)
-    commitTransition(nextSession, [])
+    if (lockedRef.current) return false
+    cancelAudio()
+    updateSession(resetSession(workoutRef.current))
+    setVisualCue(null)
+    setStartError(null)
+    return true
   }
 
   return {
     session,
-    visualCue: visualCue.event,
+    visualCue,
+    operationLocked,
+    startError,
     start,
     pause,
     resume,
     reset,
-    isRunning: isRunningPhase(session.phase),
-    isWarningWindow:
-      isRunningPhase(session.phase) &&
-      session.remainingMs > 0 &&
-      session.remainingMs <= 5000,
+    setLocked,
   }
 }

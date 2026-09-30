@@ -3,6 +3,9 @@ import type { CueEvent } from './timerSession'
 export interface AudioCuePlayer {
   unlock: () => Promise<boolean>
   play: (event: CueEvent, enabled: boolean) => Promise<void>
+  scheduleAt: (event: CueEvent, enabled: boolean, targetAt: number) => boolean
+  scheduleCountdownAt: (second: number, enabled: boolean, targetAt: number) => boolean
+  cancelScheduled: () => void
   playCountdownTick: (
     second: number,
     enabled: boolean,
@@ -167,6 +170,8 @@ const countdownCueMap: Record<CountdownCueVariant, Record<1 | 2 | 3, ToneStep[]>
 export function createAudioCuePlayer(): AudioCuePlayer {
   let context: AudioContext | null = null
   let outputBus: OutputBus | null = null
+  let generation = 0
+  let scheduled: OscillatorNode[] = []
 
   const ensureContext = async () => {
     if (typeof window === 'undefined' || !('AudioContext' in window)) {
@@ -229,6 +234,7 @@ export function createAudioCuePlayer(): AudioCuePlayer {
     gainNode.connect(bus.input)
     oscillator.start(startAt)
     oscillator.stop(startAt + duration + 0.02)
+    scheduled.push(oscillator)
   }
 
   const ensureOutputBus = (ctx: AudioContext) => {
@@ -262,8 +268,9 @@ export function createAudioCuePlayer(): AudioCuePlayer {
       return
     }
 
+    const currentGeneration = generation
     const ctx = await ensureContext()
-    if (!ctx || ctx.state !== 'running') {
+    if (!ctx || ctx.state !== 'running' || currentGeneration !== generation) {
       return
     }
 
@@ -302,8 +309,9 @@ export function createAudioCuePlayer(): AudioCuePlayer {
       return
     }
 
+    const currentGeneration = generation
     const ctx = await ensureContext()
-    if (!ctx || ctx.state !== 'running') {
+    if (!ctx || ctx.state !== 'running' || currentGeneration !== generation) {
       return
     }
 
@@ -333,9 +341,38 @@ export function createAudioCuePlayer(): AudioCuePlayer {
     }
   }
 
+  const scheduleSteps = (steps: ToneStep[], targetAt: number) => {
+    const ctx = context
+    if (!ctx || ctx.state !== 'running') return false
+    const lead = targetAt - performance.now()
+    if (lead < 25) return false
+    const startAt = ctx.currentTime + lead / 1000
+
+    for (const step of steps) {
+      const toneStart = startAt + step.delay
+      scheduleTone(ctx, toneStart, step.frequency, step.duration, step.gain, step.waveform)
+      if (step.overtone && step.overtoneGain) {
+        scheduleTone(ctx, toneStart, step.overtone, step.duration, step.overtoneGain, 'triangle')
+      }
+    }
+    return true
+  }
+
+  const cancelScheduled = () => {
+    generation += 1
+    for (const oscillator of scheduled) {
+      try { oscillator.stop() } catch { /* already stopped */ }
+    }
+    scheduled = []
+  }
+
   return {
     unlock,
     play,
     playCountdownTick,
+    scheduleAt: (event, enabled, targetAt) => !enabled || scheduleSteps(cueMap[event], targetAt),
+    scheduleCountdownAt: (second, enabled, targetAt) =>
+      !enabled || (second >= 1 && second <= 3 && scheduleSteps(countdownCueMap.start[second as 1 | 2 | 3], targetAt)),
+    cancelScheduled,
   }
 }

@@ -309,6 +309,12 @@ export function getStepProgress(session: WorkoutSession) {
   return clamp(1 - session.remainingMs / step.durationMs, 0, 1)
 }
 
+export function getWaterFill(session: WorkoutSession) {
+  if (session.phase === 'complete') return 1
+  if (getEffectivePhase(session) !== 'interval') return 0
+  return getStepProgress(session)
+}
+
 export function getTotalWorkoutSeconds(workout: QuickWorkoutInput) {
   const normalized = normalizeWorkoutInput(workout)
   const repSeconds =
