@@ -160,8 +160,8 @@ describe('setup interactions', () => {
     expect(host.querySelector('.runScreen')).toBeNull()
     expect(host.querySelector('.setupScreen')).not.toBeNull()
     expect(host.querySelector('[role="alert"]')?.textContent).toMatch(/音声/)
-    expect(host.querySelector<HTMLInputElement>('#minutes')?.value).toBe('1')
-    expect(host.querySelector<HTMLInputElement>('#seconds')?.value).toBe('15')
+    expect(host.querySelector<HTMLInputElement>('#minutes')?.value).toBe('4')
+    expect(host.querySelector<HTMLInputElement>('#seconds')?.value).toBe('0')
   })
 })
 

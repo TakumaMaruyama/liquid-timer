@@ -39,6 +39,9 @@ describe('presetStore', () => {
     expect(state.selectedPresetId).toBe(state.presets[0].id)
     expect(state.presets[0].name).toBe('メインセット')
     expect(state.presets[0].workout.title).toBe('メインセット')
+    expect(state.presets[0].workout.intervalSec).toBe(240)
+    expect(state.presets[0].workout.leadInSec).toBe(10)
+    expect(state.presets[0].workout.audioEnabled).toBe(true)
   })
 
   it('recovers when storage JSON is corrupted', () => {

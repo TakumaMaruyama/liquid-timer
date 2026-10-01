@@ -57,7 +57,7 @@ export const DEFAULT_WORKOUT: QuickWorkoutInput = {
   title: 'メインセット',
   rounds: 4,
   repsPerRound: 6,
-  intervalSec: 75,
+  intervalSec: 240,
   roundRestSec: 45,
   leadInSec: 10,
   audioEnabled: true,
